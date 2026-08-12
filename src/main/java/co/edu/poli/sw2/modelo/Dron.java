@@ -41,5 +41,21 @@ public class Dron {
 
     public List<Sensor> getSensores() {
         return sensores;
-    }	
+    }
+    
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setSenal(double senal) {
+        this.senal = senal;
+    }
+
+    public void setModelo(String modelo) {
+        this.modelo = modelo;
+    }
+
+    public void setPeso(double peso) {
+        this.peso = peso;
+    }
 }
