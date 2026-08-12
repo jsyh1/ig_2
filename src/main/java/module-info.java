@@ -4,5 +4,10 @@ module co.edu.poli.sw2 {
 	requires java.sql;
 
     opens co.edu.poli.sw2 to javafx.fxml;
+
+	//Nuevas
+	opens co.edu.poli.sw2.controlador to javafx.fxml;
+	opens co.edu.poli.sw2.modelo to javafx.base;
+	
     exports co.edu.poli.sw2;
 }
