@@ -19,8 +19,8 @@ public class db {
     private static db instancia;
 
     private static final String URL =
-            "jdbc:mysql://localhost:3306/drone_db";
-    private static final String USUARIO = "root";
+            "jdbc:mysql://localhost:5432/drone";
+    private static final String USUARIO = "postgres";
     private static final String CLAVE = "";
 
     private Connection conexion;
