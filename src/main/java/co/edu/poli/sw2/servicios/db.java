@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 /**
  * Clase Singleton encargada de gestionar la conexión
- * con la base de datos MySQL.
+ *  * con la base de datos PostgreSQL.
  *
  * <p>El patrón Singleton garantiza que solamente exista
  * una instancia de esta clase durante la ejecución del programa.</p>
@@ -19,7 +19,7 @@ public class db {
     private static db instancia;
 
     private static final String URL =
-            "jdbc:mysql://localhost:5432/drone";
+            "jdbc:postgresql://localhost:5432/drone";
     private static final String USUARIO = "postgres";
     private static final String CLAVE = "";
 

@@ -9,7 +9,7 @@ import java.util.List;
  * @author Jsyh
  * @version 1.0
  */
-public class DonDAOImplementado implements DronDAO {
+public class DronDAOImplementado implements DronDAO {
 
     @Override
     public boolean crear(Dron dron) {
