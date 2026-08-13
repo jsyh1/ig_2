@@ -12,7 +12,8 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1">
+            xmlns:fx="http://javafx.com/fxml/1"
+           	fx:controller="co.edu.poli.sw2.controlador.DronController">
 
     <top>
         <VBox spacing="5">
@@ -85,19 +86,23 @@
 
                     <Button fx:id="btnNuevo"
                             text="Nuevo"
-                            prefWidth="100"/>
+                            prefWidth="100"
+                            onAction="#nuevoDron"/>
 
                     <Button fx:id="btnGuardar"
                             text="Guardar"
-                            prefWidth="100"/>
+                            prefWidth="100"
+                            onAction="#guardarDron"/>
 
                     <Button fx:id="btnEditar"
                             text="Editar"
-                            prefWidth="100"/>
+                            prefWidth="100"
+                            onAction="#editarDron"/>
 
                     <Button fx:id="btnEliminar"
                             text="Eliminar"
-                            prefWidth="100"/>
+                            prefWidth="100"
+                            onAction="#eliminarDron"/>
 
                 </HBox>
 
