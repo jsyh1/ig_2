@@ -1,4 +1,4 @@
-package co.edu.poli.sw2;
+package co.edu.poli.vista;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
