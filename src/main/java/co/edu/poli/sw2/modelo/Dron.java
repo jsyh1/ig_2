@@ -2,23 +2,23 @@ package co.edu.poli.sw2.modelo;
 
 import java.util.List;
 
-public class Dron {
+public abstract class Dron {
 
     private int id;
-    private double senal;
+    private String serial;
     private String modelo;
     private double peso;
 
     private Mision mision;
     private List<Sensor> sensores;
-
+    
     public Dron() {
     	
     }
     
-    public Dron(int id, double senal, String modelo, double peso) {
+    public Dron(int id, String serial, String modelo, double peso) {
         this.id = id;
-        this.senal = senal;
+        this.serial = serial;
         this.modelo = modelo;
         this.peso = peso;
     }
@@ -27,8 +27,8 @@ public class Dron {
         return id;
     }
 
-    public double getSenal() {
-        return senal;
+    public String getSerial() {
+        return serial;
     }
 
     public String getModelo() {
@@ -51,8 +51,8 @@ public class Dron {
         this.id = id;
     }
 
-    public void setSenal(double senal) {
-        this.senal = senal;
+    public void setSerial(String serial) {
+        this.serial = serial;
     }
 
     public void setModelo(String modelo) {
