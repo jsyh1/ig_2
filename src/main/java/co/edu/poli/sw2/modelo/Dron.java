@@ -12,6 +12,10 @@ public class Dron {
     private Mision mision;
     private List<Sensor> sensores;
 
+    public Dron() {
+    	
+    }
+    
     public Dron(int id, double senal, String modelo, double peso) {
         this.id = id;
         this.senal = senal;
