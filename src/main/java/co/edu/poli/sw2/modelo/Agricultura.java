@@ -3,6 +3,10 @@ package co.edu.poli.sw2.modelo;
 public class Agricultura extends Dron{
 	
 	private double capacidadTanque;
+	
+	public Agricultura() {
+		
+	}
 
 	public Agricultura(int id, String serial, String modelo, double peso, double capacidadTanque) {
 		super(id, serial, modelo, peso);

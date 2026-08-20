@@ -2,16 +2,20 @@ package co.edu.poli.sw2.controlador;
 
 import java.util.List;
 
+import co.edu.poli.servicios.crearDronAgricultura;
 import co.edu.poli.servicios.crearDronVigilancia;
 import co.edu.poli.servicios.factoriaDrones;
 import co.edu.poli.sw2.dao.DronDAO;
 import co.edu.poli.sw2.dao.DronDAOImplementado;
+import co.edu.poli.sw2.modelo.Agricultura;
 import co.edu.poli.sw2.modelo.Dron;
+import co.edu.poli.sw2.modelo.Vigilancia;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -43,7 +47,7 @@ public class DronController {
 	private TextField txtId;
 
 	@FXML
-	private TextField txtSenal;
+	private TextField txtSerial;
 
 	@FXML
 	private TextField txtModelo;
@@ -69,6 +73,14 @@ public class DronController {
 
 	@FXML
 	private TableColumn<Dron, Double> colPeso;
+	
+	
+	//faltan en el fxml
+	@FXML
+	private CheckBox cbDeteccionTermica;
+	
+	@FXML
+	private TextField txtCapacidadTanque;
 
 	// =========================
 	// BOTONES
@@ -85,6 +97,9 @@ public class DronController {
 
 	@FXML
 	private Button btnEliminar;
+
+	@FXML
+	private ChoiceBox<String> cbTipo;
 
 	// =========================
 	// DATOS
@@ -183,33 +198,101 @@ public class DronController {
 		try {
 
 			int id = Integer.parseInt(txtId.getText());
-			double senal = Double.parseDouble(txtSenal.getText());
+
+			String serial = txtSerial.getText();
+
 			String modelo = txtModelo.getText();
+
 			double peso = Double.parseDouble(txtPeso.getText());
 
-			factoriaDrones factoria = new crearDronVigilancia();
+			String tipo = cbTipo.getValue();
 
-			Vigilancia v =factoria.crearDrone()
+			double capacidadTanque = Double.parseDouble(txtCapacidadTanque.getText());
 			
-			if (dronDAO.crear(dron)) {
+			boolean deteccionTermica = cbDeteccionTermica.isSelected();
+			
+			if (tipo.equals("Agricultura")) {
 
-				listaDrones.add(dron);
+				// 2. Crear la Factory de Agricultura
 
-				limpiarFormulario();
+				factoriaDrones factoria = new crearDronAgricultura();
 
-				mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Drone registrado correctamente.");
+				// 3. La Factory crea el objeto Agricultura
 
-			} else {
+				Dron dron = factoria.crearDrone();
 
-				mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo registrar el drone.");
+				// 4. Llenar los datos que hereda de Dron
+
+				dron.setId(id);
+
+				dron.setSerial(serial);
+
+				dron.setModelo(modelo);
+
+				dron.setPeso(peso);
+
+				// 5. Convertirlo a Agricultura para acceder
+				// al atributo específico
+
+				Agricultura agricultura = (Agricultura) dron;
+
+				agricultura.setCapacidadTanque(capacidadTanque);
+				if (dronDAO.crear(dron)) {
+
+					listaDrones.add(dron);
+
+					limpiarFormulario();
+
+					mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Drone registrado correctamente.");
+
+				} else {
+
+					mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo registrar el drone.");
+				}
+
+			} else if (tipo.equals("Vigilancia")) {
+				
+				// 2. Crear la Factory de Agricultura
+
+				factoriaDrones factoria = new crearDronVigilancia();
+				
+				// 3. La Factory crea el objeto Agricultura
+
+				Dron dron = factoria.crearDrone();
+
+				// 4. Llenar los datos que hereda de Dron
+
+				dron.setId(id);
+
+				dron.setSerial(serial);
+
+				dron.setModelo(modelo);
+
+				dron.setPeso(peso);
+				
+				Vigilancia vigilancia = (Vigilancia) dron;
+				
+				if (dronDAO.crear(dron)) {
+
+					listaDrones.add(dron);
+
+					limpiarFormulario();
+
+					mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Drone registrado correctamente.");
+
+				} else {
+
+					mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo registrar el drone.");
+				}
+
 			}
+			
 
 		} catch (NumberFormatException e) {
 
 			mostrarAlerta(Alert.AlertType.ERROR, "Datos inválidos", "ID, señal y peso deben ser valores numéricos.");
 		}
 	}
-
 	// =========================
 	// READ
 	// =========================
