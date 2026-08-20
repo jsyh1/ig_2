@@ -75,7 +75,7 @@ public class DronController {
 	private TableColumn<Dron, Double> colPeso;
 	
 	
-	
+	//faltan en el fxml
 	@FXML
 	private CheckBox cbDeteccionTermica;
 	
@@ -210,6 +210,7 @@ public class DronController {
 			double capacidadTanque = Double.parseDouble(txtCapacidadTanque.getText());
 			
 			boolean deteccionTermica = cbDeteccionTermica.isSelected();
+			
 			if (tipo.equals("Agricultura")) {
 
 				// 2. Crear la Factory de Agricultura
