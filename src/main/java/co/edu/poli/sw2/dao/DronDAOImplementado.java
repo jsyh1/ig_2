@@ -1,9 +1,6 @@
 package co.edu.poli.sw2.dao;
 
-import co.edu.poli.servicios.crearDronAgricultura;
-import co.edu.poli.servicios.crearDronVigilancia;
 import co.edu.poli.servicios.db;
-import co.edu.poli.servicios.factoriaDrones;
 import co.edu.poli.sw2.modelo.Agricultura;
 import co.edu.poli.sw2.modelo.Dron;
 import co.edu.poli.sw2.modelo.Vigilancia;
@@ -12,67 +9,26 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Implementación del DAO para la entidad {@link Dron}.
- *
- * <p>
- * Esta clase permite realizar las operaciones CRUD sobre la tabla {@code Drone}
- * de la base de datos MySQL.
- * </p>
- *
- * <p>
- * Las operaciones disponibles son:
- * </p>
- *
- * <ul>
- * <li>Crear drones.</li>
- * <li>Listar drones.</li>
- * <li>Buscar drones por ID.</li>
- * <li>Actualizar drones.</li>
- * <li>Eliminar drones.</li>
- * </ul>
- *
- * @author Jsyh
- * @version 1.0
- */
 public class DronDAOImplementado implements DronDAO {
 
-	/**
-	 * Conexión utilizada para acceder a la base de datos.
-	 */
-	private final Connection conexion;
+    private final Connection conexion;
 
-	/**
-	 * Constructor de la implementación del DAO.
-	 *
-	 * <p>
-	 * Obtiene la conexión mediante la clase Singleton {@link db}.
-	 * </p>
-	 */
-	public DronDAOImplementado() {
-		conexion = db.getInstancia().getConexion();
-	}
+    public DronDAOImplementado() {
+        conexion = db.getInstancia().getConexion();
+    }
 
-	/**
-     * Crea un nuevo drone en la base de datos.
-     *
-     * <p>
-     * El ID es generado automáticamente por MySQL debido a la propiedad
-     * {@code AUTO_INCREMENT}.
-     * </p>
-     *
-     * @param dron drone que se desea almacenar
-     * @return {@code true} si el drone fue creado correctamente;
-     *         {@code false} si ocurrió algún error
-     */
-    
+
+    // =========================================================
+    // CREAR
+    // =========================================================
+
     @Override
     public boolean crear(Dron dron) {
 
-    	
         if (dron == null) {
             return false;
         }
@@ -82,197 +38,653 @@ public class DronDAOImplementado implements DronDAO {
             return false;
         }
 
-        String sql = "INSERT INTO Drone (senal, modelo, peso) "
-                   + "VALUES (?, ?, ?)";
+        String sqlDron = """
+                INSERT INTO Drone (serial, modelo, peso)
+                VALUES (?, ?, ?)
+                """;
 
-        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+        try {
 
-        	
-            ps.setString(1, dron.getSerial());
-            ps.setString(2, dron.getModelo());
-            ps.setDouble(3, dron.getPeso());
-        	
-            int filas = ps.executeUpdate();
+            // Iniciamos transacción
+            conexion.setAutoCommit(false);
 
-            return filas > 0;
+            try (PreparedStatement ps = conexion.prepareStatement(
+                    sqlDron,
+                    Statement.RETURN_GENERATED_KEYS)) {
+
+                // =================================================
+                // 1. GUARDAR DATOS GENERALES EN DRONE
+                // =================================================
+
+                ps.setString(1, dron.getSerial());
+                ps.setString(2, dron.getModelo());
+                ps.setDouble(3, dron.getPeso());
+
+                int filas = ps.executeUpdate();
+
+                if (filas == 0) {
+                    conexion.rollback();
+                    return false;
+                }
+
+
+                // =================================================
+                // 2. OBTENER ID GENERADO
+                // =================================================
+
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+
+                    if (!rs.next()) {
+                        conexion.rollback();
+                        return false;
+                    }
+
+                    int idGenerado = rs.getInt(1);
+
+                    // Guardamos el ID también dentro del objeto Java
+                    dron.setId(idGenerado);
+
+
+                    // =================================================
+                    // 3. SI EL DRON ES DE AGRICULTURA
+                    // =================================================
+
+                    if (dron instanceof Agricultura) {
+
+                        Agricultura agricultura = (Agricultura) dron;
+
+                        String sqlAgricultura = """
+                                INSERT INTO Agricultura
+                                (id, capacidad_tanque)
+                                VALUES (?, ?)
+                                """;
+
+                        try (PreparedStatement psAgricultura =
+                                     conexion.prepareStatement(sqlAgricultura)) {
+
+                            psAgricultura.setInt(
+                                    1,
+                                    idGenerado
+                            );
+
+                            psAgricultura.setDouble(
+                                    2,
+                                    agricultura.getCapacidadTanque()
+                            );
+
+                            int resultado =
+                                    psAgricultura.executeUpdate();
+
+                            if (resultado == 0) {
+                                conexion.rollback();
+                                return false;
+                            }
+                        }
+
+
+                    // =================================================
+                    // 4. SI EL DRON ES DE VIGILANCIA
+                    // =================================================
+
+                    } else if (dron instanceof Vigilancia) {
+
+                        Vigilancia vigilancia = (Vigilancia) dron;
+
+                        String sqlVigilancia = """
+                                INSERT INTO Vigilancia
+                                (id, deteccion_termica)
+                                VALUES (?, ?)
+                                """;
+
+                        try (PreparedStatement psVigilancia =
+                                     conexion.prepareStatement(sqlVigilancia)) {
+
+                            psVigilancia.setInt(
+                                    1,
+                                    idGenerado
+                            );
+
+                            psVigilancia.setBoolean(
+                                    2,
+                                    vigilancia.isDeteccionTermica()
+                            );
+
+                            int resultado =
+                                    psVigilancia.executeUpdate();
+
+                            if (resultado == 0) {
+                                conexion.rollback();
+                                return false;
+                            }
+                        }
+
+                    } else {
+
+                        // Si no es Agricultura ni Vigilancia
+                        conexion.rollback();
+                        return false;
+                    }
+
+                    // =================================================
+                    // 5. TODO SALIÓ BIEN
+                    // =================================================
+
+                    conexion.commit();
+
+                    return true;
+                }
+
+            } catch (SQLException e) {
+
+                conexion.rollback();
+
+                System.out.println("Error al crear el drone.");
+                System.out.println(e.getMessage());
+
+                return false;
+
+            } finally {
+
+                conexion.setAutoCommit(true);
+            }
 
         } catch (SQLException e) {
 
-            System.out.println("Error al crear el drone.");
+            System.out.println("Error en la transacción.");
             System.out.println(e.getMessage());
 
             return false;
         }
     }
 
-	/**
-	 * Obtiene todos los drones almacenados en la base de datos.
-	 *
-	 * @return lista de drones encontrados. Si ocurre un error, retorna una lista
-	 *         vacía.
-	 */
-	@Override
-	public List<Dron> listar() {
 
-		List<Dron> drones = new ArrayList<>();
+    // =========================================================
+    // LISTAR
+    // =========================================================
 
-		if (conexion == null) {
-			System.out.println("No existe conexión con la base de datos.");
-			return drones;
-		}
+    @Override
+    public List<Dron> listar() {
 
-		String sql = "SELECT id, senal, modelo, peso FROM Drone";
+        List<Dron> drones = new ArrayList<>();
 
-		try (PreparedStatement ps = conexion.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        if (conexion == null) {
+            System.out.println("No existe conexión con la base de datos.");
+            return drones;
+        }
 
-			while (rs.next()) {
+        String sql = """
+                SELECT
+                    d.id,
+                    d.serial,
+                    d.modelo,
+                    d.peso,
 
-				Dron dron = new Dron();
+                    a.id AS agricultura_id,
+                    a.capacidad_tanque,
 
-				dron.setId(rs.getInt("id"));
-				dron.setSerial(rs.getString("senal"));
-				dron.setModelo(rs.getString("modelo"));
-				dron.setPeso(rs.getDouble("peso"));
+                    v.id AS vigilancia_id,
+                    v.deteccion_termica
 
-				drones.add(dron);
-			}
+                FROM Drone d
 
-		} catch (SQLException e) {
+                LEFT JOIN Agricultura a
+                    ON d.id = a.id
 
-			System.out.println("Error al listar los drones.");
-			System.out.println(e.getMessage());
-		}
+                LEFT JOIN Vigilancia v
+                    ON d.id = v.id
+                """;
 
-		return drones;
-	}
+        try (
+                PreparedStatement ps =
+                        conexion.prepareStatement(sql);
 
-	/**
-	 * Busca un drone por su identificador.
-	 *
-	 * @param id identificador del drone que se desea buscar
-	 * @return el drone encontrado o {@code null} si no existe
-	 */
-	@Override
-	public Dron buscarPorId(int id) {
+                ResultSet rs =
+                        ps.executeQuery()
+        ) {
 
-		if (conexion == null) {
-			System.out.println("No existe conexión con la base de datos.");
-			return null;
-		}
+            while (rs.next()) {
 
-		String sql = "SELECT id, senal, modelo, peso " + "FROM Drone WHERE id = ?";
+                Dron dron = null;
 
-		try (PreparedStatement ps = conexion.prepareStatement(sql)) {
 
-			ps.setInt(1, id);
+                // =============================================
+                // ES AGRICULTURA
+                // =============================================
 
-			try (ResultSet rs = ps.executeQuery()) {
+                if (rs.getObject("agricultura_id") != null) {
 
-				if (rs.next()) {
+                    Agricultura agricultura =
+                            new Agricultura();
 
-					Dron dron = new Dron();
+                    agricultura.setCapacidadTanque(
+                            rs.getDouble("capacidad_tanque")
+                    );
 
-					dron.setId(rs.getInt("id"));
-					dron.setSerial(rs.getString("senal"));
-					dron.setModelo(rs.getString("modelo"));
-					dron.setPeso(rs.getDouble("peso"));
+                    dron = agricultura;
+                }
 
-					return dron;
-				}
-			}
 
-		} catch (SQLException e) {
+                // =============================================
+                // ES VIGILANCIA
+                // =============================================
 
-			System.out.println("Error al buscar el drone.");
-			System.out.println(e.getMessage());
-		}
+                else if (rs.getObject("vigilancia_id") != null) {
 
-		return null;
-	}
+                    Vigilancia vigilancia =
+                            new Vigilancia();
 
-	/**
-	 * Actualiza los datos de un drone existente.
-	 *
-	 * <p>
-	 * El identificador del drone se utiliza para determinar qué registro debe
-	 * actualizarse.
-	 * </p>
-	 *
-	 * @param dron drone que contiene los datos actualizados
-	 * @return {@code true} si el drone fue actualizado correctamente; {@code false}
-	 *         si no existe o ocurrió un error
-	 */
-	@Override
-	public boolean actualizar(Dron dron) {
+                    vigilancia.setDeteccionTermica(
+                            rs.getBoolean("deteccion_termica")
+                    );
 
-		if (dron == null) {
-			return false;
-		}
+                    dron = vigilancia;
+                }
 
-		if (conexion == null) {
-			System.out.println("No existe conexión con la base de datos.");
-			return false;
-		}
 
-		String sql = "UPDATE Drone " + "SET senal = ?, modelo = ?, peso = ? " + "WHERE id = ?";
+                // =============================================
+                // DATOS GENERALES
+                // =============================================
 
-		try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+                if (dron != null) {
 
-			ps.setString(1, dron.getSerial());
-			ps.setString(2, dron.getModelo());
-			ps.setDouble(3, dron.getPeso());
-			ps.setInt(4, dron.getId());
+                    dron.setId(
+                            rs.getInt("id")
+                    );
 
-			int filas = ps.executeUpdate();
+                    dron.setSerial(
+                            rs.getString("serial")
+                    );
 
-			return filas > 0;
+                    dron.setModelo(
+                            rs.getString("modelo")
+                    );
 
-		} catch (SQLException e) {
+                    dron.setPeso(
+                            rs.getDouble("peso")
+                    );
 
-			System.out.println("Error al actualizar el drone.");
-			System.out.println(e.getMessage());
+                    drones.add(dron);
+                }
+            }
 
-			return false;
-		}
-	}
+        } catch (SQLException e) {
 
-	/**
-	 * Elimina un drone de la base de datos.
-	 *
-	 * <p>
-	 * La eliminación puede fallar si el drone está asociado a una misión, debido a
-	 * la restricción {@code ON DELETE RESTRICT} definida en la tabla
-	 * {@code Mision}.
-	 * </p>
-	 *
-	 * @param id identificador del drone que se desea eliminar
-	 * @return {@code true} si el drone fue eliminado correctamente; {@code false}
-	 *         si no existe o ocurrió un error
-	 */
-	@Override
-	public boolean eliminar(int id) {
+            System.out.println("Error al listar los drones.");
+            System.out.println(e.getMessage());
+        }
 
-		if (conexion == null) {
-			System.out.println("No existe conexión con la base de datos.");
-			return false;
-		}
+        return drones;
+    }
 
-		String sql = "DELETE FROM Drone WHERE id = ?";
 
-		try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+    // =========================================================
+    // BUSCAR POR ID
+    // =========================================================
 
-			ps.setInt(1, id);
+    @Override
+    public Dron buscarPorId(int id) {
 
-			int filas = ps.executeUpdate();
+        if (conexion == null) {
+            System.out.println("No existe conexión con la base de datos.");
+            return null;
+        }
 
-			return filas > 0;
+        String sql = """
+                SELECT
+                    d.id,
+                    d.serial,
+                    d.modelo,
+                    d.peso,
 
-		} catch (SQLException e) {
+                    a.idn AS agricultura_id,
+                    a.capacidad_tanque,
 
-			System.out.println("Error al eliminar el drone.");
-			System.out.println(e.getMessage());
+                    v.id AS vigilancia_id,
+                    v.deteccion_termica
 
-			return false;
-		}
-	}
+                FROM Drone d
+
+                LEFT JOIN Agricultura a
+                    ON d.id = a.id
+
+                LEFT JOIN Vigilancia v
+                    ON d.id = v.id
+
+                WHERE d.id = ?
+                """;
+
+        try (PreparedStatement ps =
+                     conexion.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                if (rs.next()) {
+
+                    Dron dron = null;
+
+
+                    // =========================================
+                    // AGRICULTURA
+                    // =========================================
+
+                    if (rs.getObject("agricultura_id") != null) {
+
+                        Agricultura agricultura =
+                                new Agricultura();
+
+                        agricultura.setCapacidadTanque(
+                                rs.getDouble("capacidad_tanque")
+                        );
+
+                        dron = agricultura;
+                    }
+
+
+                    // =========================================
+                    // VIGILANCIA
+                    // =========================================
+
+                    else if (rs.getObject("vigilancia_id") != null) {
+
+                        Vigilancia vigilancia =
+                                new Vigilancia();
+
+                        vigilancia.setDeteccionTermica(
+                                rs.getBoolean("deteccion_termica")
+                        );
+
+                        dron = vigilancia;
+                    }
+
+
+                    // =========================================
+                    // DATOS GENERALES
+                    // =========================================
+
+                    if (dron != null) {
+
+                        dron.setId(
+                                rs.getInt("id")
+                        );
+
+                        dron.setSerial(
+                                rs.getString("serial")
+                        );
+
+                        dron.setModelo(
+                                rs.getString("modelo")
+                        );
+
+                        dron.setPeso(
+                                rs.getDouble("peso")
+                        );
+
+                        return dron;
+                    }
+                }
+
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println("Error al buscar el drone.");
+            System.out.println(e.getMessage());
+        }
+
+        return null;
+    }
+
+
+    // =========================================================
+    // ACTUALIZAR
+    // =========================================================
+
+    @Override
+    public boolean actualizar(Dron dron) {
+
+        if (dron == null) {
+            return false;
+        }
+
+        if (conexion == null) {
+            System.out.println("No existe conexión con la base de datos.");
+            return false;
+        }
+
+        try {
+
+            conexion.setAutoCommit(false);
+
+
+            // =================================================
+            // 1. ACTUALIZAR DATOS GENERALES
+            // =================================================
+
+            String sqlDron = """
+                    UPDATE Drone
+                    SET serial = ?, modelo = ?, peso = ?
+                    WHERE id = ?
+                    """;
+
+            try (PreparedStatement ps =
+                         conexion.prepareStatement(sqlDron)) {
+
+                ps.setString(
+                        1,
+                        dron.getSerial()
+                );
+
+                ps.setString(
+                        2,
+                        dron.getModelo()
+                );
+
+                ps.setDouble(
+                        3,
+                        dron.getPeso()
+                );
+
+                ps.setInt(
+                        4,
+                        dron.getId()
+                );
+
+                int filas = ps.executeUpdate();
+
+                if (filas == 0) {
+                    conexion.rollback();
+                    return false;
+                }
+            }
+
+
+            // =================================================
+            // 2. ACTUALIZAR AGRICULTURA
+            // =================================================
+
+            if (dron instanceof Agricultura) {
+
+                Agricultura agricultura =
+                        (Agricultura) dron;
+
+                String sqlAgricultura = """
+                        UPDATE Agricultura
+                        SET capacidad_tanque = ?
+                        WHERE id = ?
+                        """;
+
+                try (PreparedStatement ps =
+                             conexion.prepareStatement(sqlAgricultura)) {
+
+                    ps.setDouble(
+                            1,
+                            agricultura.getCapacidadTanque()
+                    );
+
+                    ps.setInt(
+                            2,
+                            dron.getId()
+                    );
+
+                    ps.executeUpdate();
+                }
+
+
+            // =================================================
+            // 3. ACTUALIZAR VIGILANCIA
+            // =================================================
+
+            } else if (dron instanceof Vigilancia) {
+
+                Vigilancia vigilancia =
+                        (Vigilancia) dron;
+
+                String sqlVigilancia = """
+                        UPDATE Vigilancia
+                        SET deteccion_termica = ?
+                        WHERE id = ?
+                        """;
+
+                try (PreparedStatement ps =
+                             conexion.prepareStatement(sqlVigilancia)) {
+
+                    ps.setBoolean(
+                            1,
+                            vigilancia.isDeteccionTermica()
+                    );
+
+                    ps.setInt(
+                            2,
+                            dron.getId()
+                    );
+
+                    ps.executeUpdate();
+                }
+            }
+
+
+            conexion.commit();
+
+            return true;
+
+        } catch (SQLException e) {
+
+            try {
+                conexion.rollback();
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+            }
+
+            System.out.println("Error al actualizar.");
+            System.out.println(e.getMessage());
+
+            return false;
+
+        } finally {
+
+            try {
+                conexion.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+
+    // =========================================================
+    // ELIMINAR
+    // =========================================================
+
+    @Override
+    public boolean eliminar(int id) {
+
+        if (conexion == null) {
+            System.out.println("No existe conexión con la base de datos.");
+            return false;
+        }
+
+        try {
+
+            conexion.setAutoCommit(false);
+
+
+            // Primero eliminamos Agricultura
+
+            String sqlAgricultura = """
+                    DELETE FROM Agricultura
+                    WHERE id = ?
+                    """;
+
+            try (PreparedStatement ps =
+                         conexion.prepareStatement(sqlAgricultura)) {
+
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+
+
+            // Luego eliminamos Vigilancia
+
+            String sqlVigilancia = """
+                    DELETE FROM Vigilancia
+                    WHERE id = ?
+                    """;
+
+            try (PreparedStatement ps =
+                         conexion.prepareStatement(sqlVigilancia)) {
+
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+
+
+            // Finalmente eliminamos el Drone
+
+            String sqlDron = """
+                    DELETE FROM Drone
+                    WHERE id = ?
+                    """;
+
+            try (PreparedStatement ps =
+                         conexion.prepareStatement(sqlDron)) {
+
+                ps.setInt(1, id);
+
+                int filas = ps.executeUpdate();
+
+                if (filas == 0) {
+                    conexion.rollback();
+                    return false;
+                }
+            }
+
+
+            conexion.commit();
+
+            return true;
+
+        } catch (SQLException e) {
+
+            try {
+                conexion.rollback();
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+            }
+
+            System.out.println("Error al eliminar.");
+            System.out.println(e.getMessage());
+
+            return false;
+
+        } finally {
+
+            try {
+                conexion.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
 }

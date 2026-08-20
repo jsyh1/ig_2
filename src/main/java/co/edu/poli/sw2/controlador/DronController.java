@@ -5,513 +5,859 @@ import java.util.List;
 import co.edu.poli.servicios.crearDronAgricultura;
 import co.edu.poli.servicios.crearDronVigilancia;
 import co.edu.poli.servicios.factoriaDrones;
+
 import co.edu.poli.sw2.dao.DronDAO;
 import co.edu.poli.sw2.dao.DronDAOImplementado;
+
 import co.edu.poli.sw2.modelo.Agricultura;
 import co.edu.poli.sw2.modelo.Dron;
 import co.edu.poli.sw2.modelo.Vigilancia;
+
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+
 import javafx.fxml.FXML;
+
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+
 import javafx.scene.control.cell.PropertyValueFactory;
 
-/**
- * Controlador de la interfaz gráfica para la gestión de drones.
- *
- * <p>
- * Se encarga de recibir los datos de la vista y comunicarse con {@link DronDAO}
- * para realizar las operaciones CRUD.
- * </p>
- *
- * @author Jsyh
- * @version 1.0
- */
+
 public class DronController {
 
-	/**
-	 * DAO utilizado para acceder a los datos de los drones.
-	 */
-	private final DronDAO dronDAO = new DronDAOImplementado();
 
-	// =========================
-	// CAMPOS DEL FORMULARIO
-	// =========================
+    // =========================================================
+    // CAMPOS GENERALES
+    // =========================================================
 
-	@FXML
-	private TextField txtId;
+    @FXML
+    private TextField txtId;
 
-	@FXML
-	private TextField txtSerial;
+    @FXML
+    private TextField txtSerial;
 
-	@FXML
-	private TextField txtModelo;
+    @FXML
+    private TextField txtModelo;
 
-	@FXML
-	private TextField txtPeso;
+    @FXML
+    private TextField txtPeso;
 
-	// =========================
-	// TABLA
-	// =========================
 
-	@FXML
-	private TableView<Dron> tblDrones;
+    // =========================================================
+    // TIPO DE DRON
+    // =========================================================
 
-	@FXML
-	private TableColumn<Dron, Integer> colId;
+    @FXML
+    private ChoiceBox<String> cbTipo;
 
-	@FXML
-	private TableColumn<Dron, Double> colSenal;
 
-	@FXML
-	private TableColumn<Dron, String> colModelo;
+    // =========================================================
+    // AGRICULTURA
+    // =========================================================
 
-	@FXML
-	private TableColumn<Dron, Double> colPeso;
-	
-	
-	//faltan en el fxml
-	@FXML
-	private CheckBox cbDeteccionTermica;
-	
-	@FXML
-	private TextField txtCapacidadTanque;
+    @FXML
+    private TextField txtCapacidadTanque;
 
-	// =========================
-	// BOTONES
-	// =========================
 
-	@FXML
-	private Button btnNuevo;
+    // =========================================================
+    // VIGILANCIA
+    // =========================================================
 
-	@FXML
-	private Button btnGuardar;
+    @FXML
+    private CheckBox cbDeteccionTermica;
 
-	@FXML
-	private Button btnEditar;
 
-	@FXML
-	private Button btnEliminar;
+    // =========================================================
+    // TABLA
+    // =========================================================
 
-	@FXML
-	private ChoiceBox<String> cbTipo;
+    @FXML
+    private TableView<Dron> tblDrones;
 
-	// =========================
-	// DATOS
-	// =========================
+    @FXML
+    private TableColumn<Dron, Integer> colId;
 
-	/**
-	 * Lista observable utilizada para mostrar los drones en la tabla de JavaFX.
-	 */
-	private final ObservableList<Dron> listaDrones = FXCollections.observableArrayList();
+    @FXML
+    private TableColumn<Dron, String> colSenal;
 
-	/**
-	 * Drone seleccionado actualmente en la tabla.
-	 */
-	private Dron dronSeleccionado;
+    @FXML
+    private TableColumn<Dron, String> colModelo;
 
-	// =========================
-	// INICIALIZACIÓN
-	// =========================
+    @FXML
+    private TableColumn<Dron, Double> colPeso;
 
-	/**
-	 * Inicializa el controlador.
-	 *
-	 * <p>
-	 * Configura las columnas, los eventos de la tabla, establece la lista de drones
-	 * y carga los datos almacenados en la base de datos.
-	 * </p>
-	 */
-	@FXML
-	public void initialize() {
 
-		configurarColumnas();
+    // =========================================================
+    // DAO
+    // =========================================================
 
-		tblDrones.setItems(listaDrones);
+    private final DronDAO dronDAO =
+            new DronDAOImplementado();
 
-		configurarEventos();
 
-		cargarDrones();
+    // =========================================================
+    // INICIALIZAR
+    // =========================================================
 
-		limpiarFormulario();
-	}
+    @FXML
+    public void initialize() {
 
-	// =========================
-	// CONFIGURACIÓN
-	// =========================
+        configurarTabla();
 
-	/**
-	 * Configura las columnas de la tabla con los atributos correspondientes de la
-	 * clase {@link Dron}.
-	 */
-	private void configurarColumnas() {
+        cargarDrones();
 
-		colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        // Cuando se selecciona un drone en la tabla
+        tblDrones.getSelectionModel()
+                .selectedItemProperty()
+                .addListener(
+                        (observable, anterior, seleccionado) -> {
 
-		colSenal.setCellValueFactory(new PropertyValueFactory<>("senal"));
+                            if (seleccionado != null) {
 
-		colModelo.setCellValueFactory(new PropertyValueFactory<>("modelo"));
+                                mostrarDronSeleccionado(
+                                        seleccionado
+                                );
+                            }
+                        }
+                );
+    }
 
-		colPeso.setCellValueFactory(new PropertyValueFactory<>("peso"));
-	}
 
-	/**
-	 * Configura los eventos de selección de la tabla.
-	 */
-	private void configurarEventos() {
+    // =========================================================
+    // CONFIGURAR TABLA
+    // =========================================================
 
-		tblDrones.getSelectionModel().selectedItemProperty().addListener((observable, anterior, seleccionado) -> {
+    private void configurarTabla() {
 
-			if (seleccionado != null) {
+        colId.setCellValueFactory(
+                new PropertyValueFactory<>("id")
+        );
 
-				dronSeleccionado = seleccionado;
+        colSenal.setCellValueFactory(
+                new PropertyValueFactory<>("serial")
+        );
 
-				cargarDronEnFormulario(seleccionado);
-			}
-		});
-	}
+        colModelo.setCellValueFactory(
+                new PropertyValueFactory<>("modelo")
+        );
 
-	// =========================
-	// CREATE
-	// =========================
+        colPeso.setCellValueFactory(
+                new PropertyValueFactory<>("peso")
+        );
+    }
 
-	/**
-	 * Guarda un nuevo drone en la base de datos.
-	 *
-	 * <p>
-	 * Obtiene los datos del formulario, crea un objeto {@link Dron} y lo envía al
-	 * DAO para realizar la inserción en la base de datos.
-	 * </p>
-	 */
-	@FXML
-	private void guardarDron() {
 
-		if (!validarCampos()) {
-			return;
-		}
+    // =========================================================
+    // CARGAR DRONES DESDE LA BASE DE DATOS
+    // =========================================================
 
-		try {
+    private void cargarDrones() {
 
-			int id = Integer.parseInt(txtId.getText());
+        List<Dron> drones =
+                dronDAO.listar();
 
-			String serial = txtSerial.getText();
+        tblDrones.setItems(
+                FXCollections.observableArrayList(
+                        drones
+                )
+        );
+    }
 
-			String modelo = txtModelo.getText();
 
-			double peso = Double.parseDouble(txtPeso.getText());
+    // =========================================================
+    // MOSTRAR DRON SELECCIONADO EN EL FORMULARIO
+    // =========================================================
 
-			String tipo = cbTipo.getValue();
+    private void mostrarDronSeleccionado(
+            Dron dron
+    ) {
 
-			double capacidadTanque = Double.parseDouble(txtCapacidadTanque.getText());
-			
-			boolean deteccionTermica = cbDeteccionTermica.isSelected();
-			
-			if (tipo.equals("Agricultura")) {
+        // Datos generales
 
-				// 2. Crear la Factory de Agricultura
+        txtId.setText(
+                String.valueOf(
+                        dron.getId()
+                )
+        );
 
-				factoriaDrones factoria = new crearDronAgricultura();
+        txtSerial.setText(
+                dron.getSerial()
+        );
 
-				// 3. La Factory crea el objeto Agricultura
+        txtModelo.setText(
+                dron.getModelo()
+        );
 
-				Dron dron = factoria.crearDrone();
+        txtPeso.setText(
+                String.valueOf(
+                        dron.getPeso()
+                )
+        );
 
-				// 4. Llenar los datos que hereda de Dron
 
-				dron.setId(id);
+        // =====================================================
+        // SI ES AGRICULTURA
+        // =====================================================
 
-				dron.setSerial(serial);
+        if (dron instanceof Agricultura) {
 
-				dron.setModelo(modelo);
+            Agricultura agricultura =
+                    (Agricultura) dron;
 
-				dron.setPeso(peso);
+            cbTipo.setValue(
+                    "Agricultura"
+            );
 
-				// 5. Convertirlo a Agricultura para acceder
-				// al atributo específico
+            txtCapacidadTanque.setText(
+                    String.valueOf(
+                            agricultura.getCapacidadTanque()
+                    )
+            );
 
-				Agricultura agricultura = (Agricultura) dron;
+            cbDeteccionTermica.setSelected(
+                    false
+            );
+        }
 
-				agricultura.setCapacidadTanque(capacidadTanque);
-				if (dronDAO.crear(dron)) {
 
-					listaDrones.add(dron);
+        // =====================================================
+        // SI ES VIGILANCIA
+        // =====================================================
 
-					limpiarFormulario();
+        else if (dron instanceof Vigilancia) {
 
-					mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Drone registrado correctamente.");
+            Vigilancia vigilancia =
+                    (Vigilancia) dron;
 
-				} else {
+            cbTipo.setValue(
+                    "Vigilancia"
+            );
 
-					mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo registrar el drone.");
-				}
+            cbDeteccionTermica.setSelected(
+                    vigilancia.isDeteccionTermica()
+            );
 
-			} else if (tipo.equals("Vigilancia")) {
-				
-				// 2. Crear la Factory de Agricultura
+            txtCapacidadTanque.clear();
+        }
+    }
 
-				factoriaDrones factoria = new crearDronVigilancia();
-				
-				// 3. La Factory crea el objeto Agricultura
 
-				Dron dron = factoria.crearDrone();
+    // =========================================================
+    // NUEVO
+    // =========================================================
 
-				// 4. Llenar los datos que hereda de Dron
+    @FXML
+    private void nuevoDron() {
 
-				dron.setId(id);
+        limpiarCampos();
 
-				dron.setSerial(serial);
+        tblDrones.getSelectionModel()
+                .clearSelection();
+    }
 
-				dron.setModelo(modelo);
 
-				dron.setPeso(peso);
-				
-				Vigilancia vigilancia = (Vigilancia) dron;
-				
-				if (dronDAO.crear(dron)) {
+    // =========================================================
+    // GUARDAR
+    // =========================================================
 
-					listaDrones.add(dron);
+    @FXML
+    private void guardarDron() {
 
-					limpiarFormulario();
+        try {
 
-					mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Drone registrado correctamente.");
+            // =============================================
+            // VALIDAR CAMPOS GENERALES
+            // =============================================
 
-				} else {
+            if (!validarCamposGenerales()) {
+                return;
+            }
 
-					mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo registrar el drone.");
-				}
 
-			}
-			
+            String serial =
+                    txtSerial.getText().trim();
 
-		} catch (NumberFormatException e) {
+            String modelo =
+                    txtModelo.getText().trim();
 
-			mostrarAlerta(Alert.AlertType.ERROR, "Datos inválidos", "ID, señal y peso deben ser valores numéricos.");
-		}
-	}
-	// =========================
-	// READ
-	// =========================
+            double peso =
+                    Double.parseDouble(
+                            txtPeso.getText().trim()
+                    );
 
-	/**
-	 * Carga todos los drones almacenados en la base de datos y los muestra en la
-	 * tabla.
-	 */
-	private void cargarDrones() {
+            String tipo =
+                    cbTipo.getValue();
 
-		listaDrones.clear();
 
-		List<Dron> drones = dronDAO.listar();
+            // =============================================
+            // VALIDAR TIPO
+            // =============================================
 
-		if (drones != null) {
-			listaDrones.addAll(drones);
-		}
-	}
+            if (tipo == null ||
+                    tipo.equals("Seleccionar")) {
 
-	/**
-	 * Busca un drone por su identificador.
-	 *
-	 * @param id identificador del drone que se desea buscar
-	 */
-	private void buscarDron(int id) {
+                mostrarAlerta(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "Debe seleccionar un tipo de dron."
+                );
 
-		Dron dron = dronDAO.buscarPorId(id);
+                return;
+            }
 
-		if (dron != null) {
 
-			cargarDronEnFormulario(dron);
+            Dron dron;
 
-		} else {
 
-			mostrarAlerta(Alert.AlertType.INFORMATION, "Búsqueda", "No se encontró un drone con el ID " + id);
-		}
-	}
+            // =================================================
+            // AGRICULTURA
+            // =================================================
 
-	// =========================
-	// UPDATE
-	// =========================
+            if (tipo.equals("Agricultura")) {
 
-	/**
-	 * Actualiza los datos del drone seleccionado.
-	 *
-	 * <p>
-	 * Obtiene los nuevos valores del formulario, modifica el objeto seleccionado y
-	 * solicita al DAO actualizar los datos en la base de datos.
-	 * </p>
-	 */
-	@FXML
-	private void editarDron() {
+                if (txtCapacidadTanque
+                        .getText()
+                        .trim()
+                        .isEmpty()) {
 
-		if (dronSeleccionado == null) {
+                    mostrarAlerta(
+                            Alert.AlertType.ERROR,
+                            "Error",
+                            "Debe ingresar la capacidad del tanque."
+                    );
 
-			mostrarAlerta(Alert.AlertType.WARNING, "Editar drone", "Selecciona un drone de la tabla.");
+                    return;
+                }
 
-			return;
-		}
 
-		if (!validarCampos()) {
-			return;
-		}
+                double capacidadTanque =
+                        Double.parseDouble(
+                                txtCapacidadTanque
+                                        .getText()
+                                        .trim()
+                        );
 
-		try {
 
-			int id = Integer.parseInt(txtId.getText());
-			double senal = Double.parseDouble(txtSenal.getText());
-			String modelo = txtModelo.getText();
-			double peso = Double.parseDouble(txtPeso.getText());
+                // Crear mediante Factory
 
-			dronSeleccionado.setId(id);
-			dronSeleccionado.setSenal(senal);
-			dronSeleccionado.setModelo(modelo);
-			dronSeleccionado.setPeso(peso);
+                factoriaDrones factoria =
+                        new crearDronAgricultura();
 
-			if (dronDAO.actualizar(dronSeleccionado)) {
+                dron =
+                        factoria.crearDrone();
 
-				tblDrones.refresh();
 
-				limpiarFormulario();
+                // Datos generales
 
-				dronSeleccionado = null;
+                dron.setSerial(serial);
 
-				mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Drone actualizado correctamente.");
+                dron.setModelo(modelo);
 
-			} else {
+                dron.setPeso(peso);
 
-				mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo actualizar el drone.");
-			}
 
-		} catch (NumberFormatException e) {
+                // Dato específico
 
-			mostrarAlerta(Alert.AlertType.ERROR, "Datos inválidos", "ID, señal y peso deben ser valores numéricos.");
-		}
-	}
+                Agricultura agricultura =
+                        (Agricultura) dron;
 
-	// =========================
-	// DELETE
-	// =========================
+                agricultura.setCapacidadTanque(
+                        capacidadTanque
+                );
 
-	/**
-	 * Elimina de la base de datos el drone seleccionado.
-	 */
-	@FXML
-	private void eliminarDron() {
 
-		if (dronSeleccionado == null) {
+                // Guardar
 
-			mostrarAlerta(Alert.AlertType.WARNING, "Eliminar drone", "Selecciona un drone de la tabla.");
+                boolean creado =
+                        dronDAO.crear(
+                                agricultura
+                        );
 
-			return;
-		}
 
-		int id = dronSeleccionado.getId();
+                if (creado) {
 
-		if (dronDAO.eliminar(id)) {
+                    mostrarAlerta(
+                            Alert.AlertType.INFORMATION,
+                            "Éxito",
+                            "Dron de Agricultura guardado correctamente."
+                    );
 
-			listaDrones.remove(dronSeleccionado);
+                    cargarDrones();
 
-			dronSeleccionado = null;
+                    limpiarCampos();
 
-			limpiarFormulario();
+                } else {
 
-			mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Drone eliminado correctamente.");
+                    mostrarAlerta(
+                            Alert.AlertType.ERROR,
+                            "Error",
+                            "No fue posible guardar el dron."
+                    );
+                }
+            }
 
-		} else {
 
-			mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo eliminar el drone.");
-		}
-	}
+            // =================================================
+            // VIGILANCIA
+            // =================================================
 
-	// =========================
-	// NUEVO
-	// =========================
+            else if (tipo.equals("Vigilancia")) {
 
-	/**
-	 * Prepara el formulario para registrar un nuevo drone.
-	 */
-	@FXML
-	private void nuevoDron() {
+                // Crear mediante Factory
 
-		limpiarFormulario();
+                factoriaDrones factoria =
+                        new crearDronVigilancia();
 
-		dronSeleccionado = null;
+                dron =
+                        factoria.crearDrone();
 
-		txtId.requestFocus();
-	}
 
-	// =========================
-	// FORMULARIO
-	// =========================
+                // Datos generales
 
-	/**
-	 * Carga los datos de un drone en los campos del formulario.
-	 *
-	 * @param dron drone cuyos datos serán mostrados
-	 */
-	private void cargarDronEnFormulario(Dron dron) {
+                dron.setSerial(serial);
 
-		txtId.setText(String.valueOf(dron.getId()));
+                dron.setModelo(modelo);
 
-		txtSenal.setText(String.valueOf(dron.getSenal()));
+                dron.setPeso(peso);
 
-		txtModelo.setText(dron.getModelo());
 
-		txtPeso.setText(String.valueOf(dron.getPeso()));
-	}
+                // Dato específico
 
-	/**
-	 * Limpia todos los campos del formulario.
-	 */
-	private void limpiarFormulario() {
+                Vigilancia vigilancia =
+                        (Vigilancia) dron;
 
-		txtId.clear();
-		txtSenal.clear();
-		txtModelo.clear();
-		txtPeso.clear();
+                vigilancia.setDeteccionTermica(
+                        cbDeteccionTermica.isSelected()
+                );
 
-		tblDrones.getSelectionModel().clearSelection();
-	}
 
-	/**
-	 * Verifica que todos los campos obligatorios tengan datos.
-	 *
-	 * @return true si los campos están completos, false en caso contrario
-	 */
-	private boolean validarCampos() {
+                // Guardar
 
-		if (txtId.getText().isBlank() || txtSenal.getText().isBlank() || txtModelo.getText().isBlank()
-				|| txtPeso.getText().isBlank()) {
+                boolean creado =
+                        dronDAO.crear(
+                                vigilancia
+                        );
 
-			mostrarAlerta(Alert.AlertType.WARNING, "Campos incompletos", "Todos los campos son obligatorios.");
 
-			return false;
-		}
+                if (creado) {
 
-		return true;
-	}
+                    mostrarAlerta(
+                            Alert.AlertType.INFORMATION,
+                            "Éxito",
+                            "Dron de Vigilancia guardado correctamente."
+                    );
 
-	// =========================
-	// ALERTAS
-	// =========================
+                    cargarDrones();
 
-	/**
-	 * Muestra una ventana de alerta al usuario.
-	 *
-	 * @param tipo    tipo de alerta
-	 * @param titulo  título de la ventana
-	 * @param mensaje mensaje mostrado al usuario
-	 */
-	private void mostrarAlerta(Alert.AlertType tipo, String titulo, String mensaje) {
+                    limpiarCampos();
 
-		Alert alerta = new Alert(tipo);
+                } else {
 
-		alerta.setTitle(titulo);
-		alerta.setHeaderText(null);
-		alerta.setContentText(mensaje);
+                    mostrarAlerta(
+                            Alert.AlertType.ERROR,
+                            "Error",
+                            "No fue posible guardar el dron."
+                    );
+                }
+            }
 
-		alerta.showAndWait();
-	}
+        } catch (NumberFormatException e) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "El peso y la capacidad del tanque deben ser números válidos."
+            );
+        }
+    }
+
+
+    // =========================================================
+    // EDITAR
+    // =========================================================
+
+    @FXML
+    private void editarDron() {
+
+        try {
+
+            // =============================================
+            // VALIDAR ID
+            // =============================================
+
+            if (txtId.getText().trim().isEmpty()) {
+
+                mostrarAlerta(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "Seleccione un dron de la tabla para editar."
+                );
+
+                return;
+            }
+
+
+            if (!validarCamposGenerales()) {
+                return;
+            }
+
+
+            int id =
+                    Integer.parseInt(
+                            txtId.getText().trim()
+                    );
+
+            String serial =
+                    txtSerial.getText().trim();
+
+            String modelo =
+                    txtModelo.getText().trim();
+
+            double peso =
+                    Double.parseDouble(
+                            txtPeso.getText().trim()
+                    );
+
+            String tipo =
+                    cbTipo.getValue();
+
+
+            if (tipo == null ||
+                    tipo.equals("Seleccionar")) {
+
+                mostrarAlerta(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "Debe seleccionar un tipo de dron."
+                );
+
+                return;
+            }
+
+
+            Dron dron;
+
+
+            // =================================================
+            // EDITAR AGRICULTURA
+            // =================================================
+
+            if (tipo.equals("Agricultura")) {
+
+                if (txtCapacidadTanque
+                        .getText()
+                        .trim()
+                        .isEmpty()) {
+
+                    mostrarAlerta(
+                            Alert.AlertType.ERROR,
+                            "Error",
+                            "Debe ingresar la capacidad del tanque."
+                    );
+
+                    return;
+                }
+
+
+                double capacidadTanque =
+                        Double.parseDouble(
+                                txtCapacidadTanque
+                                        .getText()
+                                        .trim()
+                        );
+
+
+                // Crear objeto Agricultura mediante Factory
+
+                factoriaDrones factoria =
+                        new crearDronAgricultura();
+
+                dron =
+                        factoria.crearDrone();
+
+
+                // ID importante para UPDATE
+
+                dron.setId(id);
+
+                dron.setSerial(serial);
+
+                dron.setModelo(modelo);
+
+                dron.setPeso(peso);
+
+
+                Agricultura agricultura =
+                        (Agricultura) dron;
+
+                agricultura.setCapacidadTanque(
+                        capacidadTanque
+                );
+
+
+                boolean actualizado =
+                        dronDAO.actualizar(
+                                agricultura
+                        );
+
+
+                if (actualizado) {
+
+                    mostrarAlerta(
+                            Alert.AlertType.INFORMATION,
+                            "Éxito",
+                            "Dron de Agricultura actualizado correctamente."
+                    );
+
+                    cargarDrones();
+
+                    limpiarCampos();
+
+                } else {
+
+                    mostrarAlerta(
+                            Alert.AlertType.ERROR,
+                            "Error",
+                            "No fue posible actualizar el dron."
+                    );
+                }
+            }
+
+
+            // =================================================
+            // EDITAR VIGILANCIA
+            // =================================================
+
+            else if (tipo.equals("Vigilancia")) {
+
+                // Crear objeto Vigilancia mediante Factory
+
+                factoriaDrones factoria =
+                        new crearDronVigilancia();
+
+                dron =
+                        factoria.crearDrone();
+
+
+                // ID importante para UPDATE
+
+                dron.setId(id);
+
+                dron.setSerial(serial);
+
+                dron.setModelo(modelo);
+
+                dron.setPeso(peso);
+
+
+                Vigilancia vigilancia =
+                        (Vigilancia) dron;
+
+                vigilancia.setDeteccionTermica(
+                        cbDeteccionTermica.isSelected()
+                );
+
+
+                boolean actualizado =
+                        dronDAO.actualizar(
+                                vigilancia
+                        );
+
+
+                if (actualizado) {
+
+                    mostrarAlerta(
+                            Alert.AlertType.INFORMATION,
+                            "Éxito",
+                            "Dron de Vigilancia actualizado correctamente."
+                    );
+
+                    cargarDrones();
+
+                    limpiarCampos();
+
+                } else {
+
+                    mostrarAlerta(
+                            Alert.AlertType.ERROR,
+                            "Error",
+                            "No fue posible actualizar el dron."
+                    );
+                }
+            }
+
+        } catch (NumberFormatException e) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "El ID, peso y capacidad del tanque deben ser números válidos."
+            );
+        }
+    }
+
+
+    // =========================================================
+    // ELIMINAR
+    // =========================================================
+
+    @FXML
+    private void eliminarDron() {
+
+        if (txtId.getText().trim().isEmpty()) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Seleccione un dron de la tabla para eliminar."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            int id =
+                    Integer.parseInt(
+                            txtId.getText().trim()
+                    );
+
+
+            boolean eliminado =
+                    dronDAO.eliminar(id);
+
+
+            if (eliminado) {
+
+                mostrarAlerta(
+                        Alert.AlertType.INFORMATION,
+                        "Éxito",
+                        "Dron eliminado correctamente."
+                );
+
+                cargarDrones();
+
+                limpiarCampos();
+
+            } else {
+
+                mostrarAlerta(
+                        Alert.AlertType.ERROR,
+                        "Error",
+                        "No fue posible eliminar el dron."
+                );
+            }
+
+        } catch (NumberFormatException e) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "El ID no es válido."
+            );
+        }
+    }
+
+
+    // =========================================================
+    // VALIDAR CAMPOS GENERALES
+    // =========================================================
+
+    private boolean validarCamposGenerales() {
+
+        if (txtSerial.getText().trim().isEmpty()) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Debe ingresar el serial."
+            );
+
+            return false;
+        }
+
+
+        if (txtModelo.getText().trim().isEmpty()) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Debe ingresar el modelo."
+            );
+
+            return false;
+        }
+
+
+        if (txtPeso.getText().trim().isEmpty()) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Debe ingresar el peso."
+            );
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    // =========================================================
+    // LIMPIAR CAMPOS
+    // =========================================================
+
+    private void limpiarCampos() {
+
+        txtId.clear();
+
+        txtSerial.clear();
+
+        txtModelo.clear();
+
+        txtPeso.clear();
+
+        txtCapacidadTanque.clear();
+
+        cbTipo.setValue(
+                "Seleccionar"
+        );
+
+        cbDeteccionTermica.setSelected(
+                false
+        );
+
+        tblDrones.getSelectionModel()
+                .clearSelection();
+    }
+
+
+    // =========================================================
+    // MOSTRAR ALERTAS
+    // =========================================================
+
+    private void mostrarAlerta(
+            Alert.AlertType tipo,
+            String titulo,
+            String mensaje
+    ) {
+
+        Alert alerta =
+                new Alert(tipo);
+
+        alerta.setTitle(titulo);
+
+        alerta.setHeaderText(null);
+
+        alerta.setContentText(mensaje);
+
+        alerta.showAndWait();
+    }
 }
