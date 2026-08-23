@@ -5,26 +5,21 @@ import java.util.List;
 import co.edu.poli.servicios.crearDronAgricultura;
 import co.edu.poli.servicios.crearDronVigilancia;
 import co.edu.poli.servicios.factoriaDrones;
-
 import co.edu.poli.sw2.dao.DronDAO;
 import co.edu.poli.sw2.dao.DronDAOImplementado;
-
 import co.edu.poli.sw2.modelo.Agricultura;
 import co.edu.poli.sw2.modelo.Dron;
 import co.edu.poli.sw2.modelo.Vigilancia;
-
 import javafx.collections.FXCollections;
-
 import javafx.fxml.FXML;
-
 import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 
 
 public class DronController {
@@ -60,8 +55,10 @@ public class DronController {
     // =========================================================
 
     @FXML
-    private TextField txtCapacidadTanque;
+    private HBox hbCapacidadTanque;
 
+    @FXML
+    private TextField txtCapacidadTanque;
 
     // =========================================================
     // VIGILANCIA
@@ -124,8 +121,70 @@ public class DronController {
                             }
                         }
                 );
+
+        // Estado inicial
+        ocultarTermica();
+        ocultarCapacidad();
+
+        // Escuchar cambios en el tipo de dron
+        cbTipo.getSelectionModel()
+            .selectedItemProperty()
+            .addListener((observable, anterior, nuevo) -> {
+
+                if ("Vigilancia".equals(nuevo)) {
+
+                    // Mostrar detección térmica
+                    mostrarTermica();
+
+                    // Ocultar y limpiar capacidad
+                    ocultarCapacidad();
+
+                } else if ("Agricultura".equals(nuevo)) {
+
+                    // Ocultar y desmarcar detección térmica
+                    ocultarTermica();
+
+                    // Mostrar capacidad
+                    mostrarCapacidad();
+
+                } else {
+
+                    // "Seleccionar" o ningún valor
+                    ocultarTermica();
+                    ocultarCapacidad();
+                }
+            });      
+    }
+    // =========================================================
+    // OCULTAR Y MOSTRAR CAMPOS ESPECÍFICOS
+    // =========================================================
+
+    //Vigilancia
+    private void mostrarTermica() {
+
+        cbDeteccionTermica.setVisible(true);
+        cbDeteccionTermica.setManaged(true);
+    }
+    private void ocultarTermica() {
+
+        cbDeteccionTermica.setVisible(false);
+        cbDeteccionTermica.setManaged(false);
+
+        cbDeteccionTermica.setSelected(false);
     }
 
+    //Agricultura
+    private void mostrarCapacidad() {
+        hbCapacidadTanque.setVisible(true);
+        hbCapacidadTanque.setManaged(true);
+    }
+    private void ocultarCapacidad() {
+
+        hbCapacidadTanque.setVisible(false);
+        hbCapacidadTanque.setManaged(false);
+
+        txtCapacidadTanque.clear();
+    }               
 
     // =========================================================
     // CONFIGURAR TABLA
@@ -149,7 +208,6 @@ public class DronController {
                 new PropertyValueFactory<>("peso")
         );
     }
-
 
     // =========================================================
     // CARGAR DRONES DESDE LA BASE DE DATOS
