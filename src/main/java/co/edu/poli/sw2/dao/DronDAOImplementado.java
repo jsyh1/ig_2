@@ -13,19 +13,67 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implementación del patrón DAO para gestionar las operaciones de persistencia
+ * de los objetos {@link Dron}.
+ *
+ * <p>
+ * Esta clase permite realizar las operaciones CRUD sobre los drones,
+ * utilizando JDBC para comunicarse con la base de datos MySQL.
+ * </p>
+ *
+ * <p>
+ * Además, identifica los diferentes tipos de drones ({@link Agricultura}
+ * y {@link Vigilancia}) y almacena sus atributos específicos en las tablas
+ * correspondientes.
+ * </p>
+ *
+ * @author Jsyh
+ * @version 1.0
+ */
 public class DronDAOImplementado implements DronDAO {
 
+    /**
+     * Conexión utilizada para realizar las operaciones con la base de datos.
+     */
     private final Connection conexion;
 
+    /**
+     * Constructor de la clase.
+     *
+     * <p>
+     * Obtiene la conexión a la base de datos mediante la instancia Singleton
+     * de la clase {@link db}.
+     * </p>
+     */
     public DronDAOImplementado() {
         conexion = db.getInstancia().getConexion();
     }
-
 
     // =========================================================
     // CREAR
     // =========================================================
 
+    /**
+     * Crea un nuevo dron en la base de datos.
+     *
+     * <p>
+     * Primero almacena los datos generales del dron en la tabla
+     * {@code Drone}. Posteriormente, dependiendo del tipo de dron,
+     * almacena sus datos específicos en la tabla {@code Agricultura}
+     * o {@code Vigilancia}.
+     * </p>
+     *
+     * <p>
+     * La operación utiliza una transacción para garantizar que todos
+     * los datos se almacenen correctamente. Si ocurre algún error,
+     * se realiza un {@code rollback}.
+     * </p>
+     *
+     * @param dron objeto {@link Dron} que se desea almacenar
+     * @return {@code true} si el dron fue creado correctamente;
+     *         {@code false} si ocurre algún error o el objeto es inválido
+     */
     @Override
     public boolean crear(Dron dron) {
 
@@ -45,16 +93,11 @@ public class DronDAOImplementado implements DronDAO {
 
         try {
 
-            // Iniciamos transacción
             conexion.setAutoCommit(false);
 
             try (PreparedStatement ps = conexion.prepareStatement(
                     sqlDron,
                     Statement.RETURN_GENERATED_KEYS)) {
-
-                // =================================================
-                // 1. GUARDAR DATOS GENERALES EN DRONE
-                // =================================================
 
                 ps.setString(1, dron.getSerial());
                 ps.setString(2, dron.getModelo());
@@ -67,11 +110,6 @@ public class DronDAOImplementado implements DronDAO {
                     return false;
                 }
 
-
-                // =================================================
-                // 2. OBTENER ID GENERADO
-                // =================================================
-
                 try (ResultSet rs = ps.getGeneratedKeys()) {
 
                     if (!rs.next()) {
@@ -81,13 +119,7 @@ public class DronDAOImplementado implements DronDAO {
 
                     int idGenerado = rs.getInt(1);
 
-                    // Guardamos el ID también dentro del objeto Java
                     dron.setId(idGenerado);
-
-
-                    // =================================================
-                    // 3. SI EL DRON ES DE AGRICULTURA
-                    // =================================================
 
                     if (dron instanceof Agricultura) {
 
@@ -120,11 +152,6 @@ public class DronDAOImplementado implements DronDAO {
                                 return false;
                             }
                         }
-
-
-                    // =================================================
-                    // 4. SI EL DRON ES DE VIGILANCIA
-                    // =================================================
 
                     } else if (dron instanceof Vigilancia) {
 
@@ -160,14 +187,9 @@ public class DronDAOImplementado implements DronDAO {
 
                     } else {
 
-                        // Si no es Agricultura ni Vigilancia
                         conexion.rollback();
                         return false;
                     }
-
-                    // =================================================
-                    // 5. TODO SALIÓ BIEN
-                    // =================================================
 
                     conexion.commit();
 
@@ -197,11 +219,22 @@ public class DronDAOImplementado implements DronDAO {
         }
     }
 
-
     // =========================================================
     // LISTAR
     // =========================================================
 
+    /**
+     * Obtiene todos los drones registrados en la base de datos.
+     *
+     * <p>
+     * Utiliza una consulta con {@code LEFT JOIN} para obtener los datos
+     * generales del dron y determinar si pertenece al tipo Agricultura
+     * o Vigilancia.
+     * </p>
+     *
+     * @return lista de objetos {@link Dron} registrados; si no existe
+     *         conexión o ocurre un error, devuelve una lista vacía
+     */
     @Override
     public List<Dron> listar() {
 
@@ -246,11 +279,6 @@ public class DronDAOImplementado implements DronDAO {
 
                 Dron dron = null;
 
-
-                // =============================================
-                // ES AGRICULTURA
-                // =============================================
-
                 if (rs.getObject("agricultura_id") != null) {
 
                     Agricultura agricultura =
@@ -263,11 +291,6 @@ public class DronDAOImplementado implements DronDAO {
                     dron = agricultura;
                 }
 
-
-                // =============================================
-                // ES VIGILANCIA
-                // =============================================
-
                 else if (rs.getObject("vigilancia_id") != null) {
 
                     Vigilancia vigilancia =
@@ -279,11 +302,6 @@ public class DronDAOImplementado implements DronDAO {
 
                     dron = vigilancia;
                 }
-
-
-                // =============================================
-                // DATOS GENERALES
-                // =============================================
 
                 if (dron != null) {
 
@@ -316,11 +334,22 @@ public class DronDAOImplementado implements DronDAO {
         return drones;
     }
 
-
     // =========================================================
     // BUSCAR POR ID
     // =========================================================
 
+    /**
+     * Busca un dron específico utilizando su identificador.
+     *
+     * <p>
+     * La consulta obtiene los datos generales y determina el tipo de dron
+     * mediante las tablas {@code Agricultura} y {@code Vigilancia}.
+     * </p>
+     *
+     * @param id identificador del dron que se desea buscar
+     * @return objeto {@link Dron} encontrado o {@code null} si no existe
+     *         o ocurre un error
+     */
     @Override
     public Dron buscarPorId(int id) {
 
@@ -364,11 +393,6 @@ public class DronDAOImplementado implements DronDAO {
 
                     Dron dron = null;
 
-
-                    // =========================================
-                    // AGRICULTURA
-                    // =========================================
-
                     if (rs.getObject("agricultura_id") != null) {
 
                         Agricultura agricultura =
@@ -381,11 +405,6 @@ public class DronDAOImplementado implements DronDAO {
                         dron = agricultura;
                     }
 
-
-                    // =========================================
-                    // VIGILANCIA
-                    // =========================================
-
                     else if (rs.getObject("vigilancia_id") != null) {
 
                         Vigilancia vigilancia =
@@ -397,11 +416,6 @@ public class DronDAOImplementado implements DronDAO {
 
                         dron = vigilancia;
                     }
-
-
-                    // =========================================
-                    // DATOS GENERALES
-                    // =========================================
 
                     if (dron != null) {
 
@@ -424,7 +438,6 @@ public class DronDAOImplementado implements DronDAO {
                         return dron;
                     }
                 }
-
             }
 
         } catch (SQLException e) {
@@ -436,11 +449,28 @@ public class DronDAOImplementado implements DronDAO {
         return null;
     }
 
-
     // =========================================================
     // ACTUALIZAR
     // =========================================================
 
+    /**
+     * Actualiza los datos de un dron existente.
+     *
+     * <p>
+     * Primero actualiza los datos generales en la tabla {@code Drone}.
+     * Posteriormente actualiza los datos específicos en la tabla
+     * correspondiente según el tipo de dron.
+     * </p>
+     *
+     * <p>
+     * La operación se realiza dentro de una transacción para garantizar
+     * la integridad de los datos.
+     * </p>
+     *
+     * @param dron objeto {@link Dron} con los datos actualizados
+     * @return {@code true} si la actualización fue exitosa;
+     *         {@code false} si ocurre algún error o el objeto es inválido
+     */
     @Override
     public boolean actualizar(Dron dron) {
 
@@ -456,11 +486,6 @@ public class DronDAOImplementado implements DronDAO {
         try {
 
             conexion.setAutoCommit(false);
-
-
-            // =================================================
-            // 1. ACTUALIZAR DATOS GENERALES
-            // =================================================
 
             String sqlDron = """
                     UPDATE Drone
@@ -499,11 +524,6 @@ public class DronDAOImplementado implements DronDAO {
                 }
             }
 
-
-            // =================================================
-            // 2. ACTUALIZAR AGRICULTURA
-            // =================================================
-
             if (dron instanceof Agricultura) {
 
                 Agricultura agricultura =
@@ -530,11 +550,6 @@ public class DronDAOImplementado implements DronDAO {
 
                     ps.executeUpdate();
                 }
-
-
-            // =================================================
-            // 3. ACTUALIZAR VIGILANCIA
-            // =================================================
 
             } else if (dron instanceof Vigilancia) {
 
@@ -564,7 +579,6 @@ public class DronDAOImplementado implements DronDAO {
                 }
             }
 
-
             conexion.commit();
 
             return true;
@@ -592,11 +606,28 @@ public class DronDAOImplementado implements DronDAO {
         }
     }
 
-
     // =========================================================
     // ELIMINAR
     // =========================================================
 
+    /**
+     * Elimina un dron de la base de datos.
+     *
+     * <p>
+     * Primero elimina los registros relacionados en las tablas
+     * {@code Agricultura} y {@code Vigilancia} y posteriormente elimina
+     * el registro correspondiente de la tabla {@code Drone}.
+     * </p>
+     *
+     * <p>
+     * La operación se ejecuta dentro de una transacción para mantener
+     * la integridad referencial de la información.
+     * </p>
+     *
+     * @param id identificador del dron que se desea eliminar
+     * @return {@code true} si el dron fue eliminado correctamente;
+     *         {@code false} si no existe o ocurre un error
+     */
     @Override
     public boolean eliminar(int id) {
 
@@ -608,9 +639,6 @@ public class DronDAOImplementado implements DronDAO {
         try {
 
             conexion.setAutoCommit(false);
-
-
-            // Primero eliminamos Agricultura
 
             String sqlAgricultura = """
                     DELETE FROM Agricultura
@@ -624,9 +652,6 @@ public class DronDAOImplementado implements DronDAO {
                 ps.executeUpdate();
             }
 
-
-            // Luego eliminamos Vigilancia
-
             String sqlVigilancia = """
                     DELETE FROM Vigilancia
                     WHERE id = ?
@@ -638,9 +663,6 @@ public class DronDAOImplementado implements DronDAO {
                 ps.setInt(1, id);
                 ps.executeUpdate();
             }
-
-
-            // Finalmente eliminamos el Drone
 
             String sqlDron = """
                     DELETE FROM Drone
@@ -659,7 +681,6 @@ public class DronDAOImplementado implements DronDAO {
                     return false;
                 }
             }
-
 
             conexion.commit();
 
