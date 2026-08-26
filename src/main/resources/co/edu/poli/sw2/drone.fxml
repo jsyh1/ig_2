@@ -164,13 +164,15 @@
 
                 <HBox spacing="12">
 
-                    <Button fx:id="btnNuevo" onAction="#nuevoDron" prefWidth="110" style="-fx-background-color: #3498db;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Nuevo" />
+                    <Button fx:id="btnNuevo" onAction="#nuevoDron" prefHeight="25.0" prefWidth="72.0" style="-fx-background-color: #3498db;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Nuevo" />
 
-                    <Button fx:id="btnGuardar" onAction="#guardarDron" prefWidth="110" style="-fx-background-color: #27ae60;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Guardar" />
+                    <Button fx:id="btnGuardar" onAction="#guardarDron" prefHeight="25.0" prefWidth="73.0" style="-fx-background-color: #27ae60;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Guardar" />
 
-                    <Button fx:id="btnEditar" onAction="#editarDron" prefWidth="110" style="-fx-background-color: #f39c12;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Editar" />
+                    <Button fx:id="btnEditar" onAction="#editarDron" prefHeight="25.0" prefWidth="58.0" style="-fx-background-color: #f39c12;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Editar" />
 
-                    <Button fx:id="btnEliminar" onAction="#eliminarDron" prefWidth="110" style="-fx-background-color: #e74c3c;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Eliminar" />
+                    <Button fx:id="btnEliminar" onAction="#eliminarDron" prefHeight="25.0" prefWidth="69.0" style="-fx-background-color: #e74c3c;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Eliminar" />
+               <Button mnemonicParsing="false" style="-fx-background-color: #6F079C; -fx-text-fill: white; -fx-font-weight: Bold; -fx-cursor: Hand; -fx-background-radius: 5;" text="Builder" />
+               <Button mnemonicParsing="false" text="Prototype" />
 
                 </HBox>
 
