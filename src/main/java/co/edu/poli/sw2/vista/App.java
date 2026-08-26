@@ -6,6 +6,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 /**
@@ -30,11 +31,6 @@ public class App extends Application {
     /**
      * Inicia la aplicación JavaFX y configura la ventana principal.
      *
-     * <p>
-     * Carga la interfaz gráfica desde el archivo FXML correspondiente,
-     * establece el título de la ventana y muestra la escena al usuario.
-     * </p>
-     *
      * @param stage ventana principal proporcionada por JavaFX
      * @throws IOException si ocurre un error al cargar el archivo FXML
      */
@@ -43,6 +39,15 @@ public class App extends Application {
 
         scene = new Scene(
                 loadFXML("/co/edu/poli/sw2/drone")
+        );
+
+        // Configurar el ícono de la aplicación
+        stage.getIcons().add(
+                new Image(
+                        getClass().getResourceAsStream(
+                                "/co/edu/poli/sw2/img/logo.jpg"
+                        )
+                )
         );
 
         stage.setTitle("Gestion de Drones");
