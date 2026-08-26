@@ -199,7 +199,7 @@ public class DronDAOImplementado implements DronDAO {
             } catch (SQLException e) {
 
                 conexion.rollback();
-
+//arreglar esto
                 System.out.println("Error al crear el drone.");
                 System.out.println(e.getMessage());
 
