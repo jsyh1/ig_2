@@ -5,8 +5,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Clase Singleton encargada de gestionar la conexión * con la base de datos
- * MYSQL.
+ * Clase Singleton encargada de gestionar la conexión con la base de datos
+ * MySQL.
  *
  * <p>
  * El patrón Singleton garantiza que solamente exista una instancia de esta
@@ -18,18 +18,42 @@ import java.sql.SQLException;
  */
 public class db {
 
+	/**
+	 * Única instancia de la clase {@code db}.
+	 */
 	private static db instancia;
 
-	private static final String URL = "jdbc:mysql://localhost:3307/sistema_drones" + "?useSSL=false"
-			+ "&serverTimezone=UTC" + "&allowPublicKeyRetrieval=true";
+	/**
+	 * URL utilizada para establecer la conexión con la base de datos MySQL.
+	 */
+	private static final String URL = "jdbc:mysql://localhost:3307/sistema_drones"
+			+ "?useSSL=false"
+			+ "&serverTimezone=UTC"
+			+ "&allowPublicKeyRetrieval=true";
+
+	/**
+	 * Usuario utilizado para acceder a la base de datos.
+	 */
 	private static final String USUARIO = "root";
+
+	/**
+	 * Contraseña utilizada para acceder a la base de datos.
+	 */
 	private static final String CLAVE = "jsyhXD7$";
 
+	/**
+	 * Objeto que representa la conexión activa con la base de datos.
+	 */
 	private Connection conexion;
 
 	/**
-	 * Constructor privado para impedir que otras clases creen directamente objetos
+	 * Constructor privado que impide que otras clases creen directamente objetos
 	 * de tipo {@code db}.
+	 *
+	 * <p>
+	 * Al crear la única instancia de la clase, se establece automáticamente
+	 * la conexión con la base de datos.
+	 * </p>
 	 */
 	private db() {
 		conectar();
@@ -37,6 +61,10 @@ public class db {
 
 	/**
 	 * Obtiene la única instancia de la clase {@code db}.
+	 *
+	 * <p>
+	 * Si la instancia aún no existe, se crea utilizando el constructor privado.
+	 * </p>
 	 *
 	 * @return instancia única de {@code db}
 	 */
@@ -50,7 +78,13 @@ public class db {
 	}
 
 	/**
-	 * Establece la conexión con la base de datos.
+	 * Establece una conexión con la base de datos utilizando las credenciales
+	 * configuradas.
+	 *
+	 * <p>
+	 * Si ocurre un error durante la conexión, se muestra el mensaje
+	 * correspondiente en la consola.
+	 * </p>
 	 *
 	 * @return conexión establecida o {@code null} si ocurre un error
 	 */
@@ -81,7 +115,12 @@ public class db {
 	}
 
 	/**
-	 * Cierra la conexión con la base de datos.
+	 * Cierra la conexión activa con la base de datos.
+	 *
+	 * <p>
+	 * La conexión solamente se cierra si existe y actualmente se encuentra
+	 * abierta.
+	 * </p>
 	 */
 	public void cerrarConexion() {
 
