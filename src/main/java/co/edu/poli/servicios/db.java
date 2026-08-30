@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 /**
  * Clase Singleton encargada de gestionar la conexión con la base de datos
  * MySQL.
@@ -16,30 +18,20 @@ import java.sql.SQLException;
  * @author Jsyh
  * @version 1.0
  */
-public class db {
+	public class db {
 
 	/**
 	 * Única instancia de la clase {@code db}.
 	 */
 	private static db instancia;
 
-	/**
-	 * URL utilizada para establecer la conexión con la base de datos MySQL.
-	 */
-	private static final String URL = "jdbc:mysql://localhost:3307/sistema_drones"
-			+ "?useSSL=false"
-			+ "&serverTimezone=UTC"
-			+ "&allowPublicKeyRetrieval=true";
+	private static final Dotenv dotenv = Dotenv.configure().load();
 
-	/**
-	 * Usuario utilizado para acceder a la base de datos.
-	 */
-	private static final String USUARIO = "root";
+	private static final String URL = dotenv.get("DB_URL");
 
-	/**
-	 * Contraseña utilizada para acceder a la base de datos.
-	 */
-	private static final String CLAVE = "jsyhXD7$";
+	private static final String USUARIO = dotenv.get("DB_USUARIO");
+
+	private static final String CLAVE = dotenv.get("DB_CLAVE");
 
 	/**
 	 * Objeto que representa la conexión activa con la base de datos.
