@@ -45,7 +45,7 @@ public class App extends Application {
         stage.getIcons().add(
                 new Image(
                         getClass().getResourceAsStream(
-                                "/co/edu/poli/sw2/img/logo.jpg"
+                                "/co/edu/poli/sw2/img/logo.png"
                         )
                 )
         );

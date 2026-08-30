@@ -2,6 +2,7 @@ package co.edu.poli.sw2.controlador;
 
 import java.util.List;
 
+import co.edu.poli.servicios.DronPrototype;
 import co.edu.poli.servicios.builder;
 import co.edu.poli.servicios.crearDronAgricultura;
 import co.edu.poli.servicios.crearDronVigilancia;
@@ -14,7 +15,6 @@ import co.edu.poli.sw2.modelo.Vigilancia;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TableColumn;
@@ -683,23 +683,152 @@ public class DronController {
 	@FXML
 	private void builderdron() {
 
-		builder vigilanciaBuilder = new builder();
+    try {
 
-		Vigilancia a = vigilanciaBuilder.id(Integer.parseInt(txtId.getText())).serial(txtSerial.getText())
-				.modelo(txtModelo.getText()).peso(Double.parseDouble(txtPeso.getText()))
-				.deteccionTermica(cbDeteccionTermica.isSelected()).build();
+        // Verificar que haya información en el formulario
+        if (txtId.getText().trim().isEmpty()) {
 
-		mostrarAlerta(Alert.AlertType.INFORMATION, "Builder",
-				"ID: " + a.getId() + "\nSerial: " + a.getSerial() + "\nModelo: " + a.getModelo() + "\nPeso: "
-						+ a.getPeso() + "\nDetección térmica: " + a.isDeteccionTermica());
-	}
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Debe ingresar el ID del dron."
+            );
+
+            return;
+        }
+
+        if (txtSerial.getText().trim().isEmpty()) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Debe ingresar el serial del dron."
+            );
+
+            return;
+        }
+
+        if (txtModelo.getText().trim().isEmpty()) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Debe ingresar el modelo del dron."
+            );
+
+            return;
+        }
+
+        if (txtPeso.getText().trim().isEmpty()) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Debe ingresar el peso del dron."
+            );
+
+            return;
+        }
+
+        // ================================
+        // BUILDER
+        // ================================
+
+        builder vigilanciaBuilder = new builder();
+
+        Vigilancia a =
+                vigilanciaBuilder
+                        .id(Integer.parseInt(txtId.getText().trim()))
+                        .serial(txtSerial.getText().trim())
+                        .modelo(txtModelo.getText().trim())
+                        .peso(Double.parseDouble(txtPeso.getText().trim()))
+                        .deteccionTermica(cbDeteccionTermica.isSelected())
+                        .build();
+
+        mostrarAlerta(
+                Alert.AlertType.INFORMATION,
+                "Builder",
+                "Dron construido correctamente.\n\n"
+                + "ID: " + a.getId()
+                + "\nSerial: " + a.getSerial()
+                + "\nModelo: " + a.getModelo()
+                + "\nPeso: " + a.getPeso()
+                + "\nDetección térmica: "
+                + a.isDeteccionTermica()
+        );
+
+    } catch (NumberFormatException e) {
+
+        mostrarAlerta(
+                Alert.AlertType.ERROR,
+                "Error",
+                "El ID y el peso deben ser valores numéricos válidos."
+        );
+    }
+}
 
 	// =========================================================
 	// PROTOTYPE
 	// =========================================================
 	@FXML
 	private void clonardron() {
+		Dron seleccionado =tblDrones.getSelectionModel().getSelectedItem();
 
+    if (seleccionado == null) {
+
+        mostrarAlerta(
+                Alert.AlertType.ERROR,
+                "Error",
+                "Seleccione un dron de la tabla para clonar."
+        );
+
+        return;
+    }
+	// Identidad del objeto original
+    int memoriaOriginal =
+            System.identityHashCode(seleccionado);
+
+    // Crear Prototype
+    DronPrototype prototype =
+            new DronPrototype(seleccionado);
+
+    // Crear clon
+    Dron clon =
+            prototype.clonar();
+
+    // Identidad del nuevo objeto
+    int memoriaClon =
+            System.identityHashCode(clon);
+
+    String informacion =
+            "DRON CLONADO CORRECTAMENTE\n\n"
+
+            + "===== DRON ORIGINAL =====\n"
+            + "ID: " + seleccionado.getId() + "\n"
+            + "Serial: " + seleccionado.getSerial() + "\n"
+            + "Modelo: " + seleccionado.getModelo() + "\n"
+            + "Peso: " + seleccionado.getPeso() + "\n"
+            + "Identidad en memoria: 0x"
+            + Integer.toHexString(memoriaOriginal)
+            + "\n\n"
+
+            + "===== CLON =====\n"
+            + "ID: " + clon.getId() + "\n"
+            + "Serial: " + clon.getSerial() + "\n"
+            + "Modelo: " + clon.getModelo() + "\n"
+            + "Peso: " + clon.getPeso() + "\n"
+            + "Identidad en memoria: 0x"
+            + Integer.toHexString(memoriaClon)
+            + "\n\n"
+
+            + "¿Son objetos diferentes?: "
+            + (seleccionado != clon ? "SÍ" : "NO");
+
+    mostrarAlerta(
+            Alert.AlertType.INFORMATION,
+            "Prototype - Clon creado",
+            informacion
+    );
 	}
 
 	// =========================================================
