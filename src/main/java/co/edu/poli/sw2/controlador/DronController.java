@@ -676,10 +676,9 @@ public class DronController {
 		}
 	}
 
-	/**
-	 * Construye un dron de vigilancia utilizando el patrón Builder y muestra sus
-	 * datos en una ventana de información.
-	 */
+	// ================================
+    // BUILDER
+    // ================================
 	@FXML
 	private void builderdron() {
 
@@ -729,10 +728,6 @@ public class DronController {
 
             return;
         }
-
-        // ================================
-        // BUILDER
-        // ================================
 
         builder vigilanciaBuilder = new builder();
 
