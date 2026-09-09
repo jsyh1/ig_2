@@ -16,6 +16,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TextArea?>
 
 <BorderPane style="-fx-background-color: #f4f6f8;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="co.edu.poli.sw2.controlador.DronController">
 
@@ -158,7 +159,17 @@
                              <TextField fx:id="txtCapacidadTanque" prefHeight="31.0" prefWidth="200.0" promptText="Capacidad del tanque" style="-fx-background-radius: 5;                                -fx-border-radius: 5;                                -fx-border-color: #d0d5da;                                -fx-padding: 6 10;" />
                </children>
             </HBox>
-
+<CheckBox
+    fx:id="cbBateriaAmpliada"
+    text="Batería ampliada"
+    onAction="#aplicarBateriaDecorator"/>
+    
+<TextArea
+    fx:id="txtResultadoDecorator"
+    editable="false"
+    prefHeight="150.0"
+    prefWidth="350.0"
+    wrapText="true"/>
 
                 <!-- Botones -->
 

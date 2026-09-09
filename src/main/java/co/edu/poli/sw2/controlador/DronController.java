@@ -23,6 +23,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 
+import co.edu.poli.servicios.drecorator.Concrete;
+import co.edu.poli.servicios.drecorator.Component;
+import co.edu.poli.servicios.drecorator.BateriaComponent;
+import javafx.scene.control.TextArea;
+
 /**
  * Controlador principal para la gestión de drones mediante la interfaz gráfica
  * desarrollada con JavaFX.
@@ -112,6 +117,13 @@ public class DronController {
 	@FXML
 	private CheckBox cbDeteccionTermica;
 
+	
+	@FXML
+	private CheckBox cbBateriaAmpliada;
+
+	@FXML
+	private TextArea txtResultadoDecorator;
+	
 	// =========================================================
 	// TABLA
 	// =========================================================
@@ -146,6 +158,8 @@ public class DronController {
 	@FXML
 	private TableColumn<Dron, Double> colPeso;
 
+	
+	
 	// =========================================================
 	// DAO
 	// =========================================================
@@ -210,6 +224,158 @@ public class DronController {
 		});
 	}
 
+	@FXML
+	private void aplicarBateriaDecorator() {
+
+	    Dron dron;
+
+	    // =====================================================
+	    // 1. SI HAY UN DRON SELECCIONADO EN LA TABLA
+	    // =====================================================
+
+	    Dron seleccionado =
+	            tblDrones.getSelectionModel().getSelectedItem();
+
+	    if (seleccionado != null) {
+
+	        dron = seleccionado;
+
+	    }
+
+	    // =====================================================
+	    // 2. SI NO HAY SELECCIÓN, TOMAMOS EL FORMULARIO
+	    // =====================================================
+
+	    else {
+
+	        try {
+
+	            // Validar datos básicos
+	            if (!validarCamposGenerales()) {
+	                cbBateriaAmpliada.setSelected(false);
+	                return;
+	            }
+
+	            String tipo = cbTipo.getValue();
+
+	            if (tipo == null || tipo.equals("Seleccionar")) {
+
+	                mostrarAlerta(
+	                        Alert.AlertType.ERROR,
+	                        "Error",
+	                        "Debe seleccionar un tipo de dron."
+	                );
+
+	                cbBateriaAmpliada.setSelected(false);
+	                return;
+	            }
+
+	            String serial = txtSerial.getText().trim();
+	            String modelo = txtModelo.getText().trim();
+	            double peso = Double.parseDouble(
+	                    txtPeso.getText().trim()
+	            );
+
+	            // =================================================
+	            // CREAR TEMPORALMENTE EL DRON SEGÚN EL FORMULARIO
+	            // =================================================
+
+	            if (tipo.equals("Agricultura")) {
+
+	                if (txtCapacidadTanque.getText()
+	                        .trim().isEmpty()) {
+
+	                    mostrarAlerta(
+	                            Alert.AlertType.ERROR,
+	                            "Error",
+	                            "Debe ingresar la capacidad del tanque."
+	                    );
+
+	                    cbBateriaAmpliada.setSelected(false);
+	                    return;
+	                }
+
+	                double capacidad =
+	                        Double.parseDouble(
+	                                txtCapacidadTanque
+	                                        .getText()
+	                                        .trim()
+	                        );
+
+	                factoriaDrones factoria =
+	                        new crearDronAgricultura();
+
+	                dron = factoria.crearDrone();
+
+	                dron.setSerial(serial);
+	                dron.setModelo(modelo);
+	                dron.setPeso(peso);
+
+	                Agricultura agricultura =
+	                        (Agricultura) dron;
+
+	                agricultura.setCapacidadTanque(
+	                        capacidad
+	                );
+
+	            } else {
+
+	                factoriaDrones factoria =
+	                        new crearDronVigilancia();
+
+	                dron = factoria.crearDrone();
+
+	                dron.setSerial(serial);
+	                dron.setModelo(modelo);
+	                dron.setPeso(peso);
+
+	                Vigilancia vigilancia =
+	                        (Vigilancia) dron;
+
+	                vigilancia.setDeteccionTermica(
+	                        cbDeteccionTermica.isSelected()
+	                );
+	            }
+
+	        } catch (NumberFormatException e) {
+
+	            cbBateriaAmpliada.setSelected(false);
+
+	            mostrarAlerta(
+	                    Alert.AlertType.ERROR,
+	                    "Error",
+	                    "El peso y la capacidad del tanque "
+	                    + "deben ser valores numéricos."
+	            );
+
+	            return;
+	        }
+	    }
+
+	    // =====================================================
+	    // DECORATOR
+	    // =====================================================
+
+	    Component componente =
+	            new Concrete(dron);
+
+	    // Si está marcado, se agrega el Decorator
+	    if (cbBateriaAmpliada.isSelected()) {
+
+	        componente =
+	                new BateriaComponent(componente);
+	    }
+
+	    // =====================================================
+	    // RESULTADO DEL COMPONENTE
+	    // =====================================================
+
+	    String resultado =
+	            componente.calcularConsumo("0");
+
+	    txtResultadoDecorator.setText(resultado);
+	}
+	
 	// =========================================================
 	// OCULTAR Y MOSTRAR CAMPOS ESPECÍFICOS
 	// =========================================================
