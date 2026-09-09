@@ -344,7 +344,7 @@ public class DronController {
 	            mostrarAlerta(
 	                    Alert.AlertType.ERROR,
 	                    "Error",
-	                    "El peso y la capacidad del tanque "
+	                    "El peso y la capacidad del tanque  "
 	                    + "deben ser valores numéricos."
 	            );
 
