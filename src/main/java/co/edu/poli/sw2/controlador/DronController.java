@@ -22,11 +22,17 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-
+import co.edu.poli.servicios.ControlAutomatico;
+import co.edu.poli.servicios.ControlDron;
+import co.edu.poli.servicios.ControlManual;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
 import co.edu.poli.servicios.drecorator.Concrete;
 import co.edu.poli.servicios.drecorator.Component;
 import co.edu.poli.servicios.drecorator.BateriaComponent;
 import javafx.scene.control.TextArea;
+
+
 
 /**
  * Controlador principal para la gestión de drones mediante la interfaz gráfica
@@ -78,6 +84,16 @@ public class DronController {
 	@FXML
 	private TextField txtPeso;
 
+	// =========================================================
+	// BRIDGE - TIPO DE CONTROL
+	// =========================================================
+
+	@FXML
+	private RadioButton rbManual;
+
+	@FXML
+	private RadioButton rbAutomatico;
+	
 	// =========================================================
 	// TIPO DE DRON
 	// =========================================================
@@ -344,7 +360,7 @@ public class DronController {
 	            mostrarAlerta(
 	                    Alert.AlertType.ERROR,
 	                    "Error",
-	                    "El peso y la capacidad del tanque  "
+	                    "El peso y la capacidad del tanque "
 	                    + "deben ser valores numéricos."
 	            );
 
@@ -990,6 +1006,54 @@ public class DronController {
             "Prototype - Clon creado",
             informacion
     );
+	}
+	// =========================================================
+	// BRIDGE
+	// =========================================================
+
+	@FXML
+	private void asignarControlDron() {
+
+	    if (!validarCamposGenerales()) {
+
+	        return;
+	    }
+
+	    ControlDron control;
+
+	    if (rbManual.isSelected()) {
+
+	        control = new ControlManual();
+
+	    } else if (rbAutomatico.isSelected()) {
+
+	        control = new ControlAutomatico();
+
+	    } else {
+
+	        mostrarAlerta(
+	                Alert.AlertType.ERROR,
+	                "Error",
+	                "Debe seleccionar un tipo de control (Manual o Automático)."
+	        );
+
+	        return;
+	    }
+
+	    String mensaje =
+	            "BRIDGE \n\n"
+	            + "===== DATOS DEL DRON =====\n"
+	            + "Serial: " + txtSerial.getText().trim() + "\n"
+	            + "Modelo: " + txtModelo.getText().trim() + "\n"
+	            + "Peso: " + txtPeso.getText().trim() + "\n\n"
+	            + "===== TIPO DE CONTROL (Implementación) =====\n"
+	            + control.TipoControl();
+
+	    mostrarAlerta(
+	            Alert.AlertType.INFORMATION,
+	            "Bridge - Control asignado",
+	            mensaje
+	    );
 	}
 
 	// =========================================================
