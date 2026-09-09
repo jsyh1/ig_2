@@ -17,6 +17,8 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ToggleGroup?>
 
 <BorderPane style="-fx-background-color: #f4f6f8;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="co.edu.poli.sw2.controlador.DronController">
 
@@ -110,6 +112,18 @@
                         </value>
 
                     </ChoiceBox>
+                    <!-- TIPO DE CONTROL (BRIDGE) -->
+
+<Label style="-fx-font-weight: 600; -fx-text-fill: #566573;" text="Tipo de control:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+
+<HBox spacing="15" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3">
+    <RadioButton fx:id="rbManual" mnemonicParsing="false" text="Manual" selected="true">
+        <toggleGroup>
+            <ToggleGroup fx:id="tgControl" />
+        </toggleGroup>
+    </RadioButton>
+    <RadioButton fx:id="rbAutomatico" mnemonicParsing="false" text="Automático" toggleGroup="$tgControl" />
+</HBox>
 
 
                     <!-- VIGILANCIA -->
@@ -184,7 +198,8 @@
                     <Button fx:id="btnEliminar" onAction="#eliminarDron" prefHeight="25.0" prefWidth="69.0" style="-fx-background-color: #e74c3c;                                -fx-text-fill: white;                                -fx-font-weight: bold;                                -fx-background-radius: 5;                                -fx-cursor: hand;" text="Eliminar" />
                		<Button fx:id="btnBuilder" mnemonicParsing="false" onAction="#builderdron" style="-fx-background-color: #6F079C; -fx-text-fill: white; -fx-font-weight: Bold; -fx-cursor: Hand; -fx-background-radius: 5;" text="Builder" />
                		<Button fx:id="btnPrototype" mnemonicParsing="false" onAction="#clonardron" style="-fx-background-color: #F4740B; -fx-background-radius: 5; -fx-font-weight: Bold; -fx-cursor: Hand; -fx-text-fill: white;" text="Prototype" />
-
+					<Button fx:id="btnBridge" mnemonicParsing="false" onAction="#asignarControlDron" style="-fx-background-color: #16A085; -fx-text-fill: white; -fx-font-weight: Bold; -fx-cursor: Hand; -fx-background-radius: 5;"
+        text="Bridge" />
                 </HBox>
 
             </VBox>
