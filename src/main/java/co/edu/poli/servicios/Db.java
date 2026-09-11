@@ -18,12 +18,12 @@ import io.github.cdimascio.dotenv.Dotenv;
  * @author Jsyh
  * @version 1.0
  */
-	public class db {
+	public class Db {
 
 	/**
 	 * Única instancia de la clase {@code db}.
 	 */
-	private static db instancia;
+	private static Db instancia;
 
 	private static final Dotenv dotenv = Dotenv.configure().load();
 
@@ -47,7 +47,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 	 * la conexión con la base de datos.
 	 * </p>
 	 */
-	private db() {
+	private Db() {
 		conectar();
 	}
 
@@ -60,10 +60,10 @@ import io.github.cdimascio.dotenv.Dotenv;
 	 *
 	 * @return instancia única de {@code db}
 	 */
-	public static db getInstancia() {
+	public static Db getInstancia() {
 
 		if (instancia == null) {
-			instancia = new db();
+			instancia = new Db();
 		}
 
 		return instancia;

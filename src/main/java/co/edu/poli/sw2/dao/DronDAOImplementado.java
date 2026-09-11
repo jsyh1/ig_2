@@ -1,6 +1,6 @@
 package co.edu.poli.sw2.dao;
 
-import co.edu.poli.servicios.db;
+import co.edu.poli.servicios.Db;
 import co.edu.poli.sw2.modelo.Agricultura;
 import co.edu.poli.sw2.modelo.Dron;
 import co.edu.poli.sw2.modelo.Vigilancia;
@@ -43,11 +43,11 @@ public class DronDAOImplementado implements DronDAO {
      *
      * <p>
      * Obtiene la conexión a la base de datos mediante la instancia Singleton
-     * de la clase {@link db}.
+     * de la clase {@link Db}.
      * </p>
      */
     public DronDAOImplementado() {
-        conexion = db.getInstancia().getConexion();
+        conexion = Db.getInstancia().getConexion();
     }
 
     // =========================================================

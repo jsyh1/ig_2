@@ -2,11 +2,7 @@ package co.edu.poli.sw2.controlador;
 
 import java.util.List;
 
-import co.edu.poli.servicios.DronPrototype;
-import co.edu.poli.servicios.builder;
-import co.edu.poli.servicios.crearDronAgricultura;
-import co.edu.poli.servicios.crearDronVigilancia;
-import co.edu.poli.servicios.factoriaDrones;
+import co.edu.poli.servicios.builder.Builder;
 import co.edu.poli.sw2.dao.DronDAO;
 import co.edu.poli.sw2.dao.DronDAOImplementado;
 import co.edu.poli.sw2.modelo.Agricultura;
@@ -28,6 +24,10 @@ import co.edu.poli.servicios.ControlManual;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import co.edu.poli.servicios.drecorator.Concrete;
+import co.edu.poli.servicios.factoria.CrearDronAgricultura;
+import co.edu.poli.servicios.factoria.CrearDronVigilancia;
+import co.edu.poli.servicios.factoria.FactoriaDrones;
+import co.edu.poli.servicios.prototype.DronPrototype;
 import co.edu.poli.servicios.drecorator.Component;
 import co.edu.poli.servicios.drecorator.BateriaComponent;
 import javafx.scene.control.TextArea;
@@ -50,8 +50,8 @@ import javafx.scene.control.TextArea;
  *
  * <p>
  * Para la creación de los diferentes tipos de drones se utiliza el patrón
- * Factory mediante las clases {@link crearDronAgricultura} y
- * {@link crearDronVigilancia}.
+ * Factory mediante las clases {@link CrearDronAgricultura} y
+ * {@link CrearDronVigilancia}.
  * </p>
  */
 public class DronController {
@@ -318,8 +318,8 @@ public class DronController {
 	                                        .trim()
 	                        );
 
-	                factoriaDrones factoria =
-	                        new crearDronAgricultura();
+	                FactoriaDrones factoria =
+	                        new CrearDronAgricultura();
 
 	                dron = factoria.crearDrone();
 
@@ -336,8 +336,8 @@ public class DronController {
 
 	            } else {
 
-	                factoriaDrones factoria =
-	                        new crearDronVigilancia();
+	                FactoriaDrones factoria =
+	                        new CrearDronVigilancia();
 
 	                dron = factoria.crearDrone();
 
@@ -605,7 +605,7 @@ public class DronController {
 				double capacidadTanque = Double.parseDouble(txtCapacidadTanque.getText().trim());
 
 				// Crear mediante Factory
-				factoriaDrones factoria = new crearDronAgricultura();
+				FactoriaDrones factoria = new CrearDronAgricultura();
 
 				dron = factoria.crearDrone();
 
@@ -639,7 +639,7 @@ public class DronController {
 			else if (tipo.equals("Vigilancia")) {
 
 				// Crear mediante Factory
-				factoriaDrones factoria = new crearDronVigilancia();
+				FactoriaDrones factoria = new CrearDronVigilancia();
 
 				dron = factoria.crearDrone();
 
@@ -741,7 +741,7 @@ public class DronController {
 
 				double capacidadTanque = Double.parseDouble(txtCapacidadTanque.getText().trim());
 
-				factoriaDrones factoria = new crearDronAgricultura();
+				FactoriaDrones factoria = new CrearDronAgricultura();
 
 				dron = factoria.crearDrone();
 
@@ -776,7 +776,7 @@ public class DronController {
 
 			else if (tipo.equals("Vigilancia")) {
 
-				factoriaDrones factoria = new crearDronVigilancia();
+				FactoriaDrones factoria = new CrearDronVigilancia();
 
 				dron = factoria.crearDrone();
 
@@ -911,7 +911,7 @@ public class DronController {
             return;
         }
 
-        builder vigilanciaBuilder = new builder();
+        Builder vigilanciaBuilder = new Builder();
 
         Vigilancia a =
                 vigilanciaBuilder
