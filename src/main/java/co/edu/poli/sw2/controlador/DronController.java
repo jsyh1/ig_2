@@ -2,7 +2,17 @@ package co.edu.poli.sw2.controlador;
 
 import java.util.List;
 
+import co.edu.poli.servicios.bridge.ControlAutomatico;
+import co.edu.poli.servicios.bridge.ControlDron;
+import co.edu.poli.servicios.bridge.ControlManual;
 import co.edu.poli.servicios.builder.Builder;
+import co.edu.poli.servicios.drecorator.BateriaComponent;
+import co.edu.poli.servicios.drecorator.Component;
+import co.edu.poli.servicios.drecorator.Concrete;
+import co.edu.poli.servicios.factoria.CrearDronAgricultura;
+import co.edu.poli.servicios.factoria.CrearDronVigilancia;
+import co.edu.poli.servicios.factoria.FactoriaDrones;
+import co.edu.poli.servicios.prototype.DronPrototype;
 import co.edu.poli.sw2.dao.DronDAO;
 import co.edu.poli.sw2.dao.DronDAOImplementado;
 import co.edu.poli.sw2.modelo.Agricultura;
@@ -13,24 +23,13 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import co.edu.poli.servicios.ControlAutomatico;
-import co.edu.poli.servicios.ControlDron;
-import co.edu.poli.servicios.ControlManual;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextArea;
-import co.edu.poli.servicios.drecorator.Concrete;
-import co.edu.poli.servicios.factoria.CrearDronAgricultura;
-import co.edu.poli.servicios.factoria.CrearDronVigilancia;
-import co.edu.poli.servicios.factoria.FactoriaDrones;
-import co.edu.poli.servicios.prototype.DronPrototype;
-import co.edu.poli.servicios.drecorator.Component;
-import co.edu.poli.servicios.drecorator.BateriaComponent;
-import javafx.scene.control.TextArea;
 
 
 
@@ -995,11 +994,8 @@ public class DronController {
             + "Modelo: " + clon.getModelo() + "\n"
             + "Peso: " + clon.getPeso() + "\n"
             + "Identidad en memoria: 0x"
-            + Integer.toHexString(memoriaClon)
-            + "\n\n"
+            + Integer.toHexString(memoriaClon);
 
-            + "¿Son objetos diferentes?: "
-            + (seleccionado != clon ? "SÍ" : "NO");
 
     mostrarAlerta(
             Alert.AlertType.INFORMATION,
@@ -1007,54 +1003,90 @@ public class DronController {
             informacion
     );
 	}
-	// =========================================================
-	// BRIDGE
-	// =========================================================
-
 	@FXML
-	private void asignarControlDron() {
+private void asignarControlDron() {
 
-	    if (!validarCamposGenerales()) {
+    if (!validarCamposGenerales()) {
 
-	        return;
-	    }
+        return;
+    }
 
-	    ControlDron control;
+    String tipo = cbTipo.getValue();
 
-	    if (rbManual.isSelected()) {
+    if (tipo == null || tipo.equals("Seleccionar")) {
 
-	        control = new ControlManual();
+        mostrarAlerta(
+                Alert.AlertType.ERROR,
+                "Error",
+                "Debe seleccionar un tipo de dron (Agricultura o Vigilancia)."
+        );
 
-	    } else if (rbAutomatico.isSelected()) {
+        return;
+    }
 
-	        control = new ControlAutomatico();
+    ControlDron control;
 
-	    } else {
+    if (rbManual.isSelected()) {
 
-	        mostrarAlerta(
-	                Alert.AlertType.ERROR,
-	                "Error",
-	                "Debe seleccionar un tipo de control (Manual o Automático)."
-	        );
+        control = new ControlManual();
 
-	        return;
-	    }
+    } else if (rbAutomatico.isSelected()) {
 
-	    String mensaje =
-	            "BRIDGE \n\n"
-	            + "===== DATOS DEL DRON =====\n"
-	            + "Serial: " + txtSerial.getText().trim() + "\n"
-	            + "Modelo: " + txtModelo.getText().trim() + "\n"
-	            + "Peso: " + txtPeso.getText().trim() + "\n\n"
-	            + "===== TIPO DE CONTROL (Implementación) =====\n"
-	            + control.TipoControl();
+        control = new ControlAutomatico();
 
-	    mostrarAlerta(
-	            Alert.AlertType.INFORMATION,
-	            "Bridge - Control asignado",
-	            mensaje
-	    );
-	}
+    } else {
+
+        mostrarAlerta(
+                Alert.AlertType.ERROR,
+                "Error",
+                "Debe seleccionar un tipo de control (Manual o Automático)."
+        );
+
+        return;
+    }
+
+    String detalleTipo;
+
+    if (tipo.equals("Agricultura")) {
+
+        if (txtCapacidadTanque.getText().trim().isEmpty()) {
+
+            mostrarAlerta(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "Debe ingresar la capacidad del tanque."
+            );
+
+            return;
+        }
+
+        detalleTipo =
+                "Tipo de Dron: Agricultura\n"
+                + "Capacidad del tanque: " + txtCapacidadTanque.getText().trim() + " L";
+
+    } else {
+
+        detalleTipo =
+                "Tipo de Dron: Vigilancia\n"
+                + "Detección térmica: " + (cbDeteccionTermica.isSelected() ? "Sí" : "No");
+    }
+
+    String mensaje =
+            "BRIDGE \n\n"
+            + "===== DATOS DEL DRON =====\n"
+            + "Serial: " + txtSerial.getText().trim() + "\n"
+            + "Modelo: " + txtModelo.getText().trim() + "\n"
+            + "Peso: " + txtPeso.getText().trim() + "\n\n"
+            + detalleTipo + "\n\n"
+            + "===== TIPO DE CONTROL (Implementación) =====\n"
+            + control.TipoControl();
+
+    mostrarAlerta(
+            Alert.AlertType.INFORMATION,
+            "Bridge - Control asignado",
+            mensaje
+    );
+}
 
 	// =========================================================
 	// VALIDAR CAMPOS GENERALES
