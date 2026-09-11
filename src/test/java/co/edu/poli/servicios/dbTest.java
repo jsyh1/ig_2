@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Clase de pruebas unitarias para verificar el funcionamiento
- * del patrón Singleton implementado en {@link db}.
+ * del patrón Singleton implementado en {@link Db}.
  *
  * <p>
  * Esta clase comprueba que la clase {@code db} mantenga una única
@@ -20,7 +20,7 @@ public class dbTest {
 
     /**
      * Verifica que dos llamadas consecutivas al método
-     * {@link db#getInstancia()} devuelvan exactamente la misma instancia.
+     * {@link Db#getInstancia()} devuelvan exactamente la misma instancia.
      *
      * <p>
      * Utiliza {@code assertSame} para comprobar que ambas referencias
@@ -30,8 +30,8 @@ public class dbTest {
     @Test
     void debeTenerUnaUnicaInstancia() {
 
-        db instancia1 = db.getInstancia();
-        db instancia2 = db.getInstancia();
+        Db instancia1 = Db.getInstancia();
+        Db instancia2 = Db.getInstancia();
 
         assertSame(instancia1, instancia2);
     }

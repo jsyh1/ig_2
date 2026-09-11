@@ -1,4 +1,4 @@
-package co.edu.poli.servicios;
+package co.edu.poli.servicios.factoria;
 
 import co.edu.poli.sw2.modelo.Dron;
 
@@ -11,7 +11,7 @@ import co.edu.poli.sw2.modelo.Dron;
  * su propia implementación del método {@link #crearDrone()}.
  * </p>
  */
-public interface factoriaDrones {
+public interface FactoriaDrones {
 
 	/**
 	 * Crea una instancia de un tipo específico de dron.

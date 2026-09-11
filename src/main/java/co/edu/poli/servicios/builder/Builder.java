@@ -1,11 +1,11 @@
-package co.edu.poli.servicios;
+package co.edu.poli.servicios.builder;
 
 import co.edu.poli.sw2.modelo.Vigilancia;
 
 /**
  * Builder encargado de construir objetos de tipo {@link Vigilancia}.
  */
-public class builder {
+public class Builder {
 
     private int id;
     private String serial;
@@ -19,7 +19,7 @@ public class builder {
      * @param id identificador del dron
      * @return este Builder
      */
-    public builder id(int id) {
+    public Builder id(int id) {
         this.id = id;
         return this;
     }
@@ -30,7 +30,7 @@ public class builder {
      * @param serial serial del dron
      * @return este Builder
      */
-    public builder serial(String serial) {
+    public Builder serial(String serial) {
         this.serial = serial;
         return this;
     }
@@ -41,7 +41,7 @@ public class builder {
      * @param modelo modelo del dron
      * @return este Builder
      */
-    public builder modelo(String modelo) {
+    public Builder modelo(String modelo) {
         this.modelo = modelo;
         return this;
     }
@@ -52,7 +52,7 @@ public class builder {
      * @param peso peso del dron
      * @return este Builder
      */
-    public builder peso(double peso) {
+    public Builder peso(double peso) {
         this.peso = peso;
         return this;
     }
@@ -63,7 +63,7 @@ public class builder {
      * @param deteccionTermica indica si posee detección térmica
      * @return este Builder
      */
-    public builder deteccionTermica(boolean deteccionTermica) {
+    public Builder deteccionTermica(boolean deteccionTermica) {
         this.deteccionTermica = deteccionTermica;
         return this;
     }
