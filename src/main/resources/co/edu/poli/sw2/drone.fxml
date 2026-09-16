@@ -382,8 +382,6 @@
                                    -fx-background-radius: 5;"
                             text="Bridge" />
 
-                    <!-- NUEVO BOTÓN COMPOSITE -->
-
                     <Button fx:id="btnComposite"
                             mnemonicParsing="false"
                             onAction="#mostrarEstructuraComposite"
@@ -393,6 +391,16 @@
                                    -fx-cursor: Hand;
                                    -fx-background-radius: 5;"
                             text="Composite" />
+
+                    <Button fx:id="btnAdapter"
+                            mnemonicParsing="false" 
+                            onAction="#exportarMisionJSON"             
+                            style="-fx-background-color: #92A016; 
+                                    -fx-text-fill: white; 
+                                    -fx-font-weight: Bold; 
+                                    -fx-cursor: Hand; 
+                                    -fx-background-radius: 5;
+                           " text="Adapter" />
 
                 </HBox>
 
