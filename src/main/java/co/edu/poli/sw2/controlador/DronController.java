@@ -1140,6 +1140,43 @@ public class DronController {
 		treeSensores.setManaged(true);
 	}
 	// =========================================================
+	// ADAPTER
+	// =========================================================
+
+	@FXML
+	private void exportarMisionJSON() {
+
+	    // Instancia de Mision precargada para la demostración
+	    Mision mision = new Mision(
+	            1,
+	            "Mision Inspección vigilancia",
+	            "Recorrido de monitoreo de vigilancia con sensores térmicos",
+	            new Date(),
+	            "Chapinero, Bogotá"
+	    );
+
+	    ExportarMision exportador = new MisionJsonAdapter(new EscritorJson());
+
+	    boolean exportado = exportador.exportarJSON(mision);
+
+	    if (exportado) {
+	        mostrarAlerta(
+	                Alert.AlertType.INFORMATION,
+	                "Adapter - Exportación exitosa",
+	                "El archivo se generó correctamente como:\n"
+	                + "mision_" + mision.getId() + ".json"
+	        );
+
+	    } else {
+
+	        mostrarAlerta(
+	                Alert.AlertType.ERROR,
+	                "Error",
+	                "No se pudo generar el archivo JSON de la misión."
+	        );
+	    }
+	}
+	// =========================================================
 	// VALIDAR CAMPOS GENERALES
 	// =========================================================
 
