@@ -45,6 +45,11 @@ public class Mision {
      * Dron asignado para realizar la misión.
      */
     private Dron dron;
+    
+    /**
+     * Ubicacion asignada para realizar la misión.
+     */
+    private String ubicacion;
 
     /**
      * Constructor que permite crear una misión con sus datos principales.
@@ -58,7 +63,8 @@ public class Mision {
             int id,
             String nombre,
             String descripcion,
-            Date fecha) {
+            Date fecha,
+            String ubicacion) {
 
         this.id = id;
 
@@ -67,6 +73,8 @@ public class Mision {
         this.descripcion = descripcion;
 
         this.fecha = fecha;
+        
+        this.ubicacion = ubicacion;
     }
 
     /**
@@ -128,4 +136,9 @@ public class Mision {
 
         return dron;
     }
+
+	public String getUbicacion() {
+		
+		return ubicacion;
+	}
 }
