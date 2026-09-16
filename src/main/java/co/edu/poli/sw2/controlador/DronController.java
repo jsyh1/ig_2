@@ -6,6 +6,8 @@ import co.edu.poli.servicios.bridge.ControlAutomatico;
 import co.edu.poli.servicios.bridge.ControlDron;
 import co.edu.poli.servicios.bridge.ControlManual;
 import co.edu.poli.servicios.builder.Builder;
+import co.edu.poli.servicios.composite.Composite;
+import co.edu.poli.servicios.composite.SensorWrapper;
 import co.edu.poli.servicios.drecorator.BateriaComponent;
 import co.edu.poli.servicios.drecorator.Component;
 import co.edu.poli.servicios.drecorator.Concrete;
@@ -17,6 +19,7 @@ import co.edu.poli.sw2.dao.DronDAO;
 import co.edu.poli.sw2.dao.DronDAOImplementado;
 import co.edu.poli.sw2.modelo.Agricultura;
 import co.edu.poli.sw2.modelo.Dron;
+import co.edu.poli.sw2.modelo.Sensor;
 import co.edu.poli.sw2.modelo.Vigilancia;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -30,8 +33,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-
-
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 
 /**
  * Controlador principal para la gestión de drones mediante la interfaz gráfica
@@ -92,7 +95,7 @@ public class DronController {
 
 	@FXML
 	private RadioButton rbAutomatico;
-	
+
 	// =========================================================
 	// TIPO DE DRON
 	// =========================================================
@@ -132,13 +135,15 @@ public class DronController {
 	@FXML
 	private CheckBox cbDeteccionTermica;
 
-	
 	@FXML
 	private CheckBox cbBateriaAmpliada;
 
 	@FXML
+	private TreeView<String> treeSensores;
+
+	@FXML
 	private TextArea txtResultadoDecorator;
-	
+
 	// =========================================================
 	// TABLA
 	// =========================================================
@@ -173,8 +178,6 @@ public class DronController {
 	@FXML
 	private TableColumn<Dron, Double> colPeso;
 
-	
-	
 	// =========================================================
 	// DAO
 	// =========================================================
@@ -242,155 +245,123 @@ public class DronController {
 	@FXML
 	private void aplicarBateriaDecorator() {
 
-	    Dron dron;
+		Dron dron;
 
-	    // =====================================================
-	    // 1. SI HAY UN DRON SELECCIONADO EN LA TABLA
-	    // =====================================================
+		// =====================================================
+		// 1. SI HAY UN DRON SELECCIONADO EN LA TABLA
+		// =====================================================
 
-	    Dron seleccionado =
-	            tblDrones.getSelectionModel().getSelectedItem();
+		Dron seleccionado = tblDrones.getSelectionModel().getSelectedItem();
 
-	    if (seleccionado != null) {
+		if (seleccionado != null) {
 
-	        dron = seleccionado;
+			dron = seleccionado;
 
-	    }
+		}
 
-	    // =====================================================
-	    // 2. SI NO HAY SELECCIÓN, TOMAMOS EL FORMULARIO
-	    // =====================================================
+		// =====================================================
+		// 2. SI NO HAY SELECCIÓN, TOMAMOS EL FORMULARIO
+		// =====================================================
 
-	    else {
+		else {
 
-	        try {
+			try {
 
-	            // Validar datos básicos
-	            if (!validarCamposGenerales()) {
-	                cbBateriaAmpliada.setSelected(false);
-	                return;
-	            }
+				// Validar datos básicos
+				if (!validarCamposGenerales()) {
+					cbBateriaAmpliada.setSelected(false);
+					return;
+				}
 
-	            String tipo = cbTipo.getValue();
+				String tipo = cbTipo.getValue();
 
-	            if (tipo == null || tipo.equals("Seleccionar")) {
+				if (tipo == null || tipo.equals("Seleccionar")) {
 
-	                mostrarAlerta(
-	                        Alert.AlertType.ERROR,
-	                        "Error",
-	                        "Debe seleccionar un tipo de dron."
-	                );
+					mostrarAlerta(Alert.AlertType.ERROR, "Error", "Debe seleccionar un tipo de dron.");
 
-	                cbBateriaAmpliada.setSelected(false);
-	                return;
-	            }
+					cbBateriaAmpliada.setSelected(false);
+					return;
+				}
 
-	            String serial = txtSerial.getText().trim();
-	            String modelo = txtModelo.getText().trim();
-	            double peso = Double.parseDouble(
-	                    txtPeso.getText().trim()
-	            );
+				String serial = txtSerial.getText().trim();
+				String modelo = txtModelo.getText().trim();
+				double peso = Double.parseDouble(txtPeso.getText().trim());
 
-	            // =================================================
-	            // CREAR TEMPORALMENTE EL DRON SEGÚN EL FORMULARIO
-	            // =================================================
+				// =================================================
+				// CREAR TEMPORALMENTE EL DRON SEGÚN EL FORMULARIO
+				// =================================================
 
-	            if (tipo.equals("Agricultura")) {
+				if (tipo.equals("Agricultura")) {
 
-	                if (txtCapacidadTanque.getText()
-	                        .trim().isEmpty()) {
+					if (txtCapacidadTanque.getText().trim().isEmpty()) {
 
-	                    mostrarAlerta(
-	                            Alert.AlertType.ERROR,
-	                            "Error",
-	                            "Debe ingresar la capacidad del tanque."
-	                    );
+						mostrarAlerta(Alert.AlertType.ERROR, "Error", "Debe ingresar la capacidad del tanque.");
 
-	                    cbBateriaAmpliada.setSelected(false);
-	                    return;
-	                }
+						cbBateriaAmpliada.setSelected(false);
+						return;
+					}
 
-	                double capacidad =
-	                        Double.parseDouble(
-	                                txtCapacidadTanque
-	                                        .getText()
-	                                        .trim()
-	                        );
+					double capacidad = Double.parseDouble(txtCapacidadTanque.getText().trim());
 
-	                FactoriaDrones factoria =
-	                        new CrearDronAgricultura();
+					FactoriaDrones factoria = new CrearDronAgricultura();
 
-	                dron = factoria.crearDrone();
+					dron = factoria.crearDrone();
 
-	                dron.setSerial(serial);
-	                dron.setModelo(modelo);
-	                dron.setPeso(peso);
+					dron.setSerial(serial);
+					dron.setModelo(modelo);
+					dron.setPeso(peso);
 
-	                Agricultura agricultura =
-	                        (Agricultura) dron;
+					Agricultura agricultura = (Agricultura) dron;
 
-	                agricultura.setCapacidadTanque(
-	                        capacidad
-	                );
+					agricultura.setCapacidadTanque(capacidad);
 
-	            } else {
+				} else {
 
-	                FactoriaDrones factoria =
-	                        new CrearDronVigilancia();
+					FactoriaDrones factoria = new CrearDronVigilancia();
 
-	                dron = factoria.crearDrone();
+					dron = factoria.crearDrone();
 
-	                dron.setSerial(serial);
-	                dron.setModelo(modelo);
-	                dron.setPeso(peso);
+					dron.setSerial(serial);
+					dron.setModelo(modelo);
+					dron.setPeso(peso);
 
-	                Vigilancia vigilancia =
-	                        (Vigilancia) dron;
+					Vigilancia vigilancia = (Vigilancia) dron;
 
-	                vigilancia.setDeteccionTermica(
-	                        cbDeteccionTermica.isSelected()
-	                );
-	            }
+					vigilancia.setDeteccionTermica(cbDeteccionTermica.isSelected());
+				}
 
-	        } catch (NumberFormatException e) {
+			} catch (NumberFormatException e) {
 
-	            cbBateriaAmpliada.setSelected(false);
+				cbBateriaAmpliada.setSelected(false);
 
-	            mostrarAlerta(
-	                    Alert.AlertType.ERROR,
-	                    "Error",
-	                    "El peso y la capacidad del tanque "
-	                    + "deben ser valores numéricos."
-	            );
+				mostrarAlerta(Alert.AlertType.ERROR, "Error",
+						"El peso y la capacidad del tanque " + "deben ser valores numéricos.");
 
-	            return;
-	        }
-	    }
+				return;
+			}
+		}
 
-	    // =====================================================
-	    // DECORATOR
-	    // =====================================================
+		// =====================================================
+		// DECORATOR
+		// =====================================================
 
-	    Component componente =
-	            new Concrete(dron);
+		Component componente = new Concrete(dron);
 
-	    // Si está marcado, se agrega el Decorator
-	    if (cbBateriaAmpliada.isSelected()) {
+		// Si está marcado, se agrega el Decorator
+		if (cbBateriaAmpliada.isSelected()) {
 
-	        componente =
-	                new BateriaComponent(componente);
-	    }
+			componente = new BateriaComponent(componente);
+		}
 
-	    // =====================================================
-	    // RESULTADO DEL COMPONENTE
-	    // =====================================================
+		// =====================================================
+		// RESULTADO DEL COMPONENTE
+		// =====================================================
 
-	    String resultado =
-	            componente.calcularConsumo("0");
+		String resultado = componente.calcularConsumo("0");
 
-	    txtResultadoDecorator.setText(resultado);
+		txtResultadoDecorator.setText(resultado);
 	}
-	
+
 	// =========================================================
 	// OCULTAR Y MOSTRAR CAMPOS ESPECÍFICOS
 	// =========================================================
@@ -858,236 +829,316 @@ public class DronController {
 	}
 
 	// ================================
-    // BUILDER
-    // ================================
+	// BUILDER
+	// ================================
 	@FXML
 	private void builderdron() {
 
-    try {
+		try {
 
-        // Verificar que haya información en el formulario
-        if (txtId.getText().trim().isEmpty()) {
+			// Verificar que haya información en el formulario
+			if (txtId.getText().trim().isEmpty()) {
 
-            mostrarAlerta(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "Debe ingresar el ID del dron."
-            );
+				mostrarAlerta(Alert.AlertType.ERROR, "Error", "Debe ingresar el ID del dron.");
 
-            return;
-        }
+				return;
+			}
 
-        if (txtSerial.getText().trim().isEmpty()) {
+			if (txtSerial.getText().trim().isEmpty()) {
 
-            mostrarAlerta(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "Debe ingresar el serial del dron."
-            );
+				mostrarAlerta(Alert.AlertType.ERROR, "Error", "Debe ingresar el serial del dron.");
 
-            return;
-        }
+				return;
+			}
 
-        if (txtModelo.getText().trim().isEmpty()) {
+			if (txtModelo.getText().trim().isEmpty()) {
 
-            mostrarAlerta(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "Debe ingresar el modelo del dron."
-            );
+				mostrarAlerta(Alert.AlertType.ERROR, "Error", "Debe ingresar el modelo del dron.");
 
-            return;
-        }
+				return;
+			}
 
-        if (txtPeso.getText().trim().isEmpty()) {
+			if (txtPeso.getText().trim().isEmpty()) {
 
-            mostrarAlerta(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "Debe ingresar el peso del dron."
-            );
+				mostrarAlerta(Alert.AlertType.ERROR, "Error", "Debe ingresar el peso del dron.");
 
-            return;
-        }
+				return;
+			}
 
-        Builder vigilanciaBuilder = new Builder();
+			Builder vigilanciaBuilder = new Builder();
 
-        Vigilancia a =
-                vigilanciaBuilder
-                        .id(Integer.parseInt(txtId.getText().trim()))
-                        .serial(txtSerial.getText().trim())
-                        .modelo(txtModelo.getText().trim())
-                        .peso(Double.parseDouble(txtPeso.getText().trim()))
-                        .deteccionTermica(cbDeteccionTermica.isSelected())
-                        .build();
+			Vigilancia a = vigilanciaBuilder.id(Integer.parseInt(txtId.getText().trim()))
+					.serial(txtSerial.getText().trim()).modelo(txtModelo.getText().trim())
+					.peso(Double.parseDouble(txtPeso.getText().trim()))
+					.deteccionTermica(cbDeteccionTermica.isSelected()).build();
 
-        mostrarAlerta(
-                Alert.AlertType.INFORMATION,
-                "Builder",
-                "Dron construido correctamente.\n\n"
-                + "ID: " + a.getId()
-                + "\nSerial: " + a.getSerial()
-                + "\nModelo: " + a.getModelo()
-                + "\nPeso: " + a.getPeso()
-                + "\nDetección térmica: "
-                + a.isDeteccionTermica()
-        );
+			mostrarAlerta(Alert.AlertType.INFORMATION, "Builder",
+					"Dron construido correctamente.\n\n" + "ID: " + a.getId() + "\nSerial: " + a.getSerial()
+							+ "\nModelo: " + a.getModelo() + "\nPeso: " + a.getPeso() + "\nDetección térmica: "
+							+ a.isDeteccionTermica());
 
-    } catch (NumberFormatException e) {
+		} catch (NumberFormatException e) {
 
-        mostrarAlerta(
-                Alert.AlertType.ERROR,
-                "Error",
-                "El ID y el peso deben ser valores numéricos válidos."
-        );
-    }
-}
+			mostrarAlerta(Alert.AlertType.ERROR, "Error", "El ID y el peso deben ser valores numéricos válidos.");
+		}
+	}
 
 	// =========================================================
 	// PROTOTYPE
 	// =========================================================
 	@FXML
 	private void clonardron() {
-		Dron seleccionado =tblDrones.getSelectionModel().getSelectedItem();
+		Dron seleccionado = tblDrones.getSelectionModel().getSelectedItem();
 
-    if (seleccionado == null) {
+		if (seleccionado == null) {
 
-        mostrarAlerta(
-                Alert.AlertType.ERROR,
-                "Error",
-                "Seleccione un dron de la tabla para clonar."
-        );
+			mostrarAlerta(Alert.AlertType.ERROR, "Error", "Seleccione un dron de la tabla para clonar.");
 
-        return;
-    }
-	// Identidad del objeto original
-    int memoriaOriginal =
-            System.identityHashCode(seleccionado);
+			return;
+		}
+		// Identidad del objeto original
+		int memoriaOriginal = System.identityHashCode(seleccionado);
 
-    // Crear Prototype
-    DronPrototype prototype =
-            new DronPrototype(seleccionado);
+		// Crear Prototype
+		DronPrototype prototype = new DronPrototype(seleccionado);
 
-    // Crear clon
-    Dron clon =
-            prototype.clonar();
+		// Crear clon
+		Dron clon = prototype.clonar();
 
-    // Identidad del nuevo objeto
-    int memoriaClon =
-            System.identityHashCode(clon);
+		// Identidad del nuevo objeto
+		int memoriaClon = System.identityHashCode(clon);
 
-    String informacion =
-            "DRON CLONADO CORRECTAMENTE\n\n"
+		String informacion = "DRON CLONADO CORRECTAMENTE\n\n"
 
-            + "===== DRON ORIGINAL =====\n"
-            + "ID: " + seleccionado.getId() + "\n"
-            + "Serial: " + seleccionado.getSerial() + "\n"
-            + "Modelo: " + seleccionado.getModelo() + "\n"
-            + "Peso: " + seleccionado.getPeso() + "\n"
-            + "Identidad en memoria: 0x"
-            + Integer.toHexString(memoriaOriginal)
-            + "\n\n"
+				+ "===== DRON ORIGINAL =====\n" + "ID: " + seleccionado.getId() + "\n" + "Serial: "
+				+ seleccionado.getSerial() + "\n" + "Modelo: " + seleccionado.getModelo() + "\n" + "Peso: "
+				+ seleccionado.getPeso() + "\n" + "Identidad en memoria: 0x" + Integer.toHexString(memoriaOriginal)
+				+ "\n\n"
 
-            + "===== CLON =====\n"
-            + "ID: " + clon.getId() + "\n"
-            + "Serial: " + clon.getSerial() + "\n"
-            + "Modelo: " + clon.getModelo() + "\n"
-            + "Peso: " + clon.getPeso() + "\n"
-            + "Identidad en memoria: 0x"
-            + Integer.toHexString(memoriaClon);
+				+ "===== CLON =====\n" + "ID: " + clon.getId() + "\n" + "Serial: " + clon.getSerial() + "\n"
+				+ "Modelo: " + clon.getModelo() + "\n" + "Peso: " + clon.getPeso() + "\n" + "Identidad en memoria: 0x"
+				+ Integer.toHexString(memoriaClon);
 
-
-    mostrarAlerta(
-            Alert.AlertType.INFORMATION,
-            "Prototype - Clon creado",
-            informacion
-    );
+		mostrarAlerta(Alert.AlertType.INFORMATION, "Prototype - Clon creado", informacion);
 	}
+
 	@FXML
-private void asignarControlDron() {
+	private void asignarControlDron() {
 
-    if (!validarCamposGenerales()) {
+		if (!validarCamposGenerales()) {
 
-        return;
-    }
+			return;
+		}
 
-    String tipo = cbTipo.getValue();
+		String tipo = cbTipo.getValue();
 
-    if (tipo == null || tipo.equals("Seleccionar")) {
+		if (tipo == null || tipo.equals("Seleccionar")) {
 
-        mostrarAlerta(
-                Alert.AlertType.ERROR,
-                "Error",
-                "Debe seleccionar un tipo de dron (Agricultura o Vigilancia)."
-        );
+			mostrarAlerta(Alert.AlertType.ERROR, "Error",
+					"Debe seleccionar un tipo de dron (Agricultura o Vigilancia).");
 
-        return;
-    }
+			return;
+		}
 
-    ControlDron control;
+		ControlDron control;
 
-    if (rbManual.isSelected()) {
+		if (rbManual.isSelected()) {
 
-        control = new ControlManual();
+			control = new ControlManual();
 
-    } else if (rbAutomatico.isSelected()) {
+		} else if (rbAutomatico.isSelected()) {
 
-        control = new ControlAutomatico();
+			control = new ControlAutomatico();
 
-    } else {
+		} else {
 
-        mostrarAlerta(
-                Alert.AlertType.ERROR,
-                "Error",
-                "Debe seleccionar un tipo de control (Manual o Automático)."
-        );
+			mostrarAlerta(Alert.AlertType.ERROR, "Error", "Debe seleccionar un tipo de control (Manual o Automático).");
 
-        return;
-    }
+			return;
+		}
 
-    String detalleTipo;
+		String detalleTipo;
 
-    if (tipo.equals("Agricultura")) {
+		if (tipo.equals("Agricultura")) {
 
-        if (txtCapacidadTanque.getText().trim().isEmpty()) {
+			if (txtCapacidadTanque.getText().trim().isEmpty()) {
 
-            mostrarAlerta(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "Debe ingresar la capacidad del tanque."
-            );
+				mostrarAlerta(Alert.AlertType.ERROR, "Error", "Debe ingresar la capacidad del tanque.");
 
-            return;
-        }
+				return;
+			}
 
-        detalleTipo =
-                "Tipo de Dron: Agricultura\n"
-                + "Capacidad del tanque: " + txtCapacidadTanque.getText().trim() + " L";
+			detalleTipo = "Tipo de Dron: Agricultura\n" + "Capacidad del tanque: " + txtCapacidadTanque.getText().trim()
+					+ " L";
 
-    } else {
+		} else {
 
-        detalleTipo =
-                "Tipo de Dron: Vigilancia\n"
-                + "Detección térmica: " + (cbDeteccionTermica.isSelected() ? "Sí" : "No");
-    }
+			detalleTipo = "Tipo de Dron: Vigilancia\n" + "Detección térmica: "
+					+ (cbDeteccionTermica.isSelected() ? "Sí" : "No");
+		}
 
-    String mensaje =
-            "BRIDGE \n\n"
-            + "===== DATOS DEL DRON =====\n"
-            + "Serial: " + txtSerial.getText().trim() + "\n"
-            + "Modelo: " + txtModelo.getText().trim() + "\n"
-            + "Peso: " + txtPeso.getText().trim() + "\n\n"
-            + detalleTipo + "\n\n"
-            + "===== TIPO DE CONTROL (Implementación) =====\n"
-            + control.TipoControl();
+		String mensaje = "BRIDGE \n\n" + "===== DATOS DEL DRON =====\n" + "Serial: " + txtSerial.getText().trim() + "\n"
+				+ "Modelo: " + txtModelo.getText().trim() + "\n" + "Peso: " + txtPeso.getText().trim() + "\n\n"
+				+ detalleTipo + "\n\n" + "===== TIPO DE CONTROL (Implementación) =====\n" + control.TipoControl();
 
-    mostrarAlerta(
-            Alert.AlertType.INFORMATION,
-            "Bridge - Control asignado",
-            mensaje
-    );
-}
+		mostrarAlerta(Alert.AlertType.INFORMATION, "Bridge - Control asignado", mensaje);
+	}
 
+	@FXML
+	private void mostrarEstructuraComposite() {
+
+		// =====================================================
+		// 1. CREAR LOS COMPOSITES
+		// =====================================================
+
+		Composite sensorGeneral = new Composite();
+
+		Composite sensorTemperatura = new Composite();
+		Composite sensorCamara = new Composite();
+		Composite sensorSonido = new Composite();
+		Composite sensorDigital = new Composite();
+
+		// =====================================================
+		// 2. CREAR LOS SENSORES
+		// =====================================================
+
+		Sensor sensorInfrarrojo = new Sensor(1, "Infrarrojo", "Bosch");
+
+		Sensor sensorRtd = new Sensor(2, "RTD", "Honeywell");
+
+		Sensor sensorCmos = new Sensor(3, "CMOS", "Sony");
+
+		Sensor sensorCcd = new Sensor(4, "CCD", "Canon");
+
+		Sensor sensorAnalogico = new Sensor(5, "Analógico", "Bosch");
+
+		Sensor sensorSpi = new Sensor(6, "SPI", "Texas Instruments");
+
+		Sensor sensorUart = new Sensor(7, "UART", "NXP");
+
+		Sensor sensorInteligente = new Sensor(8, "Inteligente", "Bosch");
+
+		// =====================================================
+		// 3. ENVOLVER LOS SENSORES
+		// =====================================================
+
+		SensorWrapper infrarrojo = new SensorWrapper(sensorInfrarrojo);
+
+		SensorWrapper rtd = new SensorWrapper(sensorRtd);
+
+		SensorWrapper cmos = new SensorWrapper(sensorCmos);
+
+		SensorWrapper ccd = new SensorWrapper(sensorCcd);
+
+		SensorWrapper analogico = new SensorWrapper(sensorAnalogico);
+
+		SensorWrapper spi = new SensorWrapper(sensorSpi);
+
+		SensorWrapper uart = new SensorWrapper(sensorUart);
+
+		SensorWrapper inteligente = new SensorWrapper(sensorInteligente);
+
+		// =====================================================
+		// 4. AGREGAR ELEMENTOS A LOS COMPOSITES
+		// =====================================================
+
+		// Sensor Temperatura
+		sensorTemperatura.agregar("Sensor Infrarrojo");
+		sensorTemperatura.agregar("RTD");
+
+		// Sensor Cámara
+		sensorCamara.agregar("Sensor CMOS");
+		sensorCamara.agregar("Sensor CCD");
+
+		// Sensor Digital
+		sensorDigital.agregar("SPI");
+		sensorDigital.agregar("UART");
+
+		// Sensor Sonido
+		sensorSonido.agregar("Sensor Analógico");
+		sensorSonido.agregar("Sensor Digital");
+
+		// Sensor General
+		sensorGeneral.agregar("Sensor Temperatura");
+		sensorGeneral.agregar("Sensor Cámara");
+		sensorGeneral.agregar("Sensor Sonido");
+		sensorGeneral.agregar("Sensor Inteligente");
+
+		// =====================================================
+		// 5. CREAR LA REPRESENTACIÓN VISUAL
+		// =====================================================
+
+		TreeItem<String> raiz = new TreeItem<>("Sensor General");
+
+		TreeItem<String> temperatura = new TreeItem<>("Sensor Temperatura");
+
+		TreeItem<String> camara = new TreeItem<>("Sensor Cámara");
+
+		TreeItem<String> sonido = new TreeItem<>("Sensor Sonido");
+
+		TreeItem<String> inteligenteItem = new TreeItem<>(inteligente.mostrar());
+
+		// =====================================================
+		// 6. SENSOR TEMPERATURA
+		// =====================================================
+
+		TreeItem<String> infrarrojoItem = new TreeItem<>(infrarrojo.mostrar());
+
+		TreeItem<String> rtdItem = new TreeItem<>(rtd.mostrar());
+
+		temperatura.getChildren().addAll(infrarrojoItem, rtdItem);
+
+		// =====================================================
+		// 7. SENSOR CÁMARA
+		// =====================================================
+
+		TreeItem<String> cmosItem = new TreeItem<>(cmos.mostrar());
+
+		TreeItem<String> ccdItem = new TreeItem<>(ccd.mostrar());
+
+		camara.getChildren().addAll(cmosItem, ccdItem);
+
+		// =====================================================
+		// 8. SENSOR DIGITAL
+		// =====================================================
+
+		TreeItem<String> digitalItem = new TreeItem<>("Sensor Digital");
+
+		TreeItem<String> spiItem = new TreeItem<>(spi.mostrar());
+
+		TreeItem<String> uartItem = new TreeItem<>(uart.mostrar());
+
+		digitalItem.getChildren().addAll(spiItem, uartItem);
+
+		// =====================================================
+		// 9. SENSOR SONIDO
+		// =====================================================
+
+		TreeItem<String> analogicoItem = new TreeItem<>(analogico.mostrar());
+
+		sonido.getChildren().addAll(analogicoItem, digitalItem);
+
+		// =====================================================
+		// 10. SENSOR GENERAL
+		// =====================================================
+
+		raiz.getChildren().addAll(temperatura, camara, sonido, inteligenteItem);
+
+		// =====================================================
+		// 11. MOSTRAR EL ÁRBOL
+		// =====================================================
+
+		treeSensores.setRoot(raiz);
+
+		raiz.setExpanded(true);
+		temperatura.setExpanded(true);
+		camara.setExpanded(true);
+		sonido.setExpanded(true);
+		digitalItem.setExpanded(true);
+
+		treeSensores.setVisible(true);
+		treeSensores.setManaged(true);
+	}
 	// =========================================================
 	// VALIDAR CAMPOS GENERALES
 	// =========================================================
