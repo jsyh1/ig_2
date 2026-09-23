@@ -2,7 +2,9 @@ package co.edu.poli.sw2.controlador;
 
 import java.util.Date;
 import java.util.List;
-
+import co.edu.poli.servicios.proxy.ProxyEliminar;
+import co.edu.poli.servicios.proxy.ServicioEliminar;
+import co.edu.poli.servicios.proxy.ServicioEliminarReal;
 import co.edu.poli.servicios.adapter.EscritorJson;
 import co.edu.poli.servicios.adapter.ExportarMision;
 import co.edu.poli.servicios.adapter.MisionJsonAdapter;
@@ -40,7 +42,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-
+import javafx.scene.control.TextInputDialog;
 /**
  * Controlador principal para la gestión de drones mediante la interfaz gráfica
  * desarrollada con JavaFX.
@@ -192,6 +194,12 @@ public class DronController {
 	 * drones.
 	 */
 	private final DronDAO dronDAO = new DronDAOImplementado();
+	
+	private final ServicioEliminar servicioEliminar =
+	        new ProxyEliminar(
+	                new ServicioEliminarReal(),
+	                "1234"
+	        );
 
 	// =========================================================
 	// INICIALIZAR
@@ -802,37 +810,83 @@ public class DronController {
 	@FXML
 	private void eliminarDron() {
 
-		if (txtId.getText().trim().isEmpty()) {
+	    if (txtId.getText().trim().isEmpty()) {
 
-			mostrarAlerta(Alert.AlertType.ERROR, "Error", "Seleccione un dron de la tabla para eliminar.");
+	        mostrarAlerta(
+	                Alert.AlertType.ERROR,
+	                "Error",
+	                "Seleccione un dron de la tabla para eliminar."
+	        );
 
-			return;
-		}
+	        return;
+	    }
 
-		try {
+	    try {
 
-			int id = Integer.parseInt(txtId.getText().trim());
+	        int id = Integer.parseInt(txtId.getText().trim());
 
-			boolean eliminado = dronDAO.eliminar(id);
+	        TextInputDialog dialog = new TextInputDialog();
 
-			if (eliminado) {
+	        dialog.setTitle("Autorización");
+	        dialog.setHeaderText("Eliminar dron");
+	        dialog.setContentText("Ingrese la contraseña:");
 
-				mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Dron eliminado correctamente.");
+	        var resultado = dialog.showAndWait();
 
-				cargarDrones();
-				limpiarCampos();
+	        if (resultado.isEmpty()) {
+	            return;
+	        }
 
-			} else {
+	        String contraseña = resultado.get();
 
-				mostrarAlerta(Alert.AlertType.ERROR, "Error", "No fue posible eliminar el dron.");
-			}
+	        ProxyEliminar proxy = (ProxyEliminar) servicioEliminar;
 
-		} catch (NumberFormatException e) {
+	        if (!proxy.checkAccess(contraseña)) {
 
-			mostrarAlerta(Alert.AlertType.ERROR, "Error", "El ID no es válido.");
-		}
+	            proxy.mostrarMensaje(
+	                    "Contraseña incorrecta. No tiene autorización para eliminar el dron."
+	            );
+
+	            mostrarAlerta(
+	                    Alert.AlertType.ERROR,
+	                    "Acceso denegado",
+	                    "La contraseña ingresada es incorrecta."
+	            );
+
+	            return;
+	        }
+
+	        boolean eliminado = proxy.eliminar(id);
+
+	        if (eliminado) {
+
+	            mostrarAlerta(
+	                    Alert.AlertType.INFORMATION,
+	                    "Éxito",
+	                    "Dron eliminado correctamente."
+	            );
+
+	            cargarDrones();
+	            limpiarCampos();
+
+	        } else {
+
+	            mostrarAlerta(
+	                    Alert.AlertType.ERROR,
+	                    "Error",
+	                    "No fue posible eliminar el dron."
+	            );
+	        }
+
+	    } catch (NumberFormatException e) {
+
+	        mostrarAlerta(
+	                Alert.AlertType.ERROR,
+	                "Error",
+	                "El ID no es válido."
+	        );
+	    }
 	}
-
 	// ================================
 	// BUILDER
 	// ================================
