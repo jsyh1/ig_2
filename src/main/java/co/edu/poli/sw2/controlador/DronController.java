@@ -17,6 +17,7 @@ import co.edu.poli.servicios.composite.SensorWrapper;
 import co.edu.poli.servicios.drecorator.BateriaComponent;
 import co.edu.poli.servicios.drecorator.Component;
 import co.edu.poli.servicios.drecorator.Concrete;
+import co.edu.poli.servicios.facade.DronFacade;
 import co.edu.poli.servicios.factoria.CrearDronAgricultura;
 import co.edu.poli.servicios.factoria.CrearDronVigilancia;
 import co.edu.poli.servicios.factoria.FactoriaDrones;
@@ -1232,6 +1233,125 @@ public class DronController {
 	                Alert.AlertType.ERROR,
 	                "Error",
 	                "No se pudo generar el archivo JSON de la misión."
+	        );
+	    }
+	}
+	// =========================================================
+	// FACADE
+	// =========================================================
+	@FXML
+	private void usarFacade() {
+		try {
+
+	        if (!validarCamposGenerales()) {
+	            return;
+	        }
+
+	        int id = Integer.parseInt(txtId.getText().trim());
+	        String serial = txtSerial.getText().trim();
+	        String modelo = txtModelo.getText().trim();
+	        double peso = Double.parseDouble(txtPeso.getText().trim());
+	        String tipo = cbTipo.getValue();
+
+	        if (tipo == null || tipo.equals("Seleccionar")) {
+
+	            mostrarAlerta(
+	                    Alert.AlertType.ERROR,
+	                    "Error",
+	                    "Debe seleccionar un tipo de dron (Agricultura o Vigilancia)."
+	            );
+
+	            return;
+	        }
+
+	        DronFacade facade = new DronFacade();
+
+	        // 1) Subsistema Factory: crea el dron según el tipo del formulario
+	        Dron dronFactory = facade.crearDronDesdeFactory(tipo);
+
+	        dronFactory.setId(id);
+	        dronFactory.setSerial(serial);
+	        dronFactory.setModelo(modelo);
+	        dronFactory.setPeso(peso);
+
+	        String detalleTipo;
+
+	        if (tipo.equals("Agricultura")) {
+
+	            if (txtCapacidadTanque.getText().trim().isEmpty()) {
+
+	                mostrarAlerta(
+	                        Alert.AlertType.ERROR,
+	                        "Error",
+	                        "Debe ingresar la capacidad del tanque."
+	                );
+
+	                return;
+	            }
+
+	            double capacidadTanque = Double.parseDouble(txtCapacidadTanque.getText().trim());
+
+	            ((Agricultura) dronFactory).setCapacidadTanque(capacidadTanque);
+
+	            detalleTipo = "Capacidad del tanque: " + capacidadTanque + " L";
+
+	        } else {
+
+	            ((Vigilancia) dronFactory).setDeteccionTermica(cbDeteccionTermica.isSelected());
+
+	            detalleTipo = "Detección térmica: " + (cbDeteccionTermica.isSelected() ? "Sí" : "No");
+	        }
+
+	        // 2) Subsistema Builder: arma un Vigilancia con los mismos datos del formulario
+	        Vigilancia dronBuilder = facade.crearDronConBuilder(
+	                id,
+	                serial,
+	                modelo,
+	                peso,
+	                cbDeteccionTermica.isSelected()
+	        );
+
+	        // 3) Subsistema Prototype: clona el dron creado por el Factory
+	        Dron dronClonado = facade.clonarDron(dronFactory);
+
+	        // Hash de identidad para demostrar que son objetos distintos
+	        String memoriaOriginal = Integer.toHexString(
+	                System.identityHashCode(dronFactory)
+	        );
+
+	        String memoriaClon = Integer.toHexString(
+	                System.identityHashCode(dronClonado)
+	        );
+	        String mensaje =
+	                "FACADE \n\n"
+	                + "===== 1. FACTORY =====\n"
+	                + "Tipo de Dron: " + tipo + "\n"
+	                + "Serial: " + dronFactory.getSerial() + "\n"
+	                + "Modelo: " + dronFactory.getModelo() + "\n"
+	                + "Peso: " + dronFactory.getPeso() + "\n"
+	                + detalleTipo + "\n\n"
+	                + "===== 2. BUILDER =====\n"
+	                + "Vigilancia construida -> Serial: " + dronBuilder.getSerial()
+	                + ", Modelo: " + dronBuilder.getModelo() + "\n\n"
+	                + "===== 3. PROTOTYPE =====\n"
+	                + "Dron original\n"
+	                + "Hash de identidad: 0x" + memoriaOriginal + "\n\n"
+	                + "Dron clonado\n"
+	                + "Hash de identidad: 0x" + memoriaClon + "\n\n";
+
+
+	        mostrarAlerta(
+	                Alert.AlertType.INFORMATION,
+	                "Facade - Subsistemas ejecutados",
+	                mensaje
+	        );
+
+	    } catch (NumberFormatException e) {
+
+	        mostrarAlerta(
+	                Alert.AlertType.ERROR,
+	                "Error",
+	                "El ID, el peso y la capacidad del tanque deben ser valores numéricos válidos."
 	        );
 	    }
 	}
